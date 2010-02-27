@@ -13,6 +13,8 @@ main()
 
 	printf(" %d \n", prob[0].l);
 
+	printf("max_index = %d \n", max_index);
+
 	run_cuda_kernel();
 
 }

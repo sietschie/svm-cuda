@@ -9,12 +9,10 @@
 #define Malloc(type,n) (type *)malloc((n)*sizeof(type))
 
 
-
 static char *line = NULL;
 static int max_line_len;
-struct svm_node *x_space[2];
 
-int max_index = 0;
+// int max_index = 0; //todo: checken ob das so immernoch wie geplant funktioniert, oder ueberhaupt gebraucht wird.
 
 void exit_input_error(int line_num)
 {
@@ -43,7 +41,7 @@ static char* readline(FILE *input)
 
 void read_problem(const char *filename)
 {
-	int elements[2], inst_max_index, i[2], j[2];
+	int inst_max_index, i[2], j[2];
 	FILE *fp = fopen(filename,"r");
 	char *endptr;
 	char *idx, *val, *label;

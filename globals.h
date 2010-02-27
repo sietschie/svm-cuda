@@ -77,4 +77,7 @@ struct svm_parameter param;		// set by parse_command_line
 
 double rho;
 
+struct svm_node *x_space[2];
+int elements[2]; //todo: globals aufteilen in datenstrukturen und daten
+
 #endif // GLOBALS_H_INCLUDED
