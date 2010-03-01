@@ -308,6 +308,8 @@ float *dot_xi_x, float *dot_yi_x, float *dot_xi_y, float *dot_yi_y,
 
 if(tid < g_data0_size + g_data1_size)
 {
+	float* g_weights[2];
+
 if(tid == 0) {
 	// cache initialisieren
 	look_up_table = g_look_up_table;
@@ -343,7 +345,7 @@ if(tid == 0) {
 	data_size[0] = g_data0_size;
 	data_size[1] = g_data1_size;
 
-	float* g_weights[2];
+
 	g_weights[0] = g_weights0;
 	g_weights[1] = g_weights1;
 }
@@ -354,9 +356,9 @@ if(tid == 0) {
         g_weights[0][i] = 0.0;
 
     for (i=0;i<data_size[1];i++)
-        g_weights[1][i] = 0.0;*/
-
-	g_weights[t_set][t_id] = 0.0;
+        g_weights[1][i] = 0.0;
+*/
+	g_weights[t_set][t_element] = 0.0;
 
 if(tid == 0) {
     g_weights[0][0] = 1.0;
@@ -377,6 +379,7 @@ if(tid == 0) {
     // speicher anfordern 
 
     // initialisieren
+	int i;
     for (i=0;i<data_size[0];i++) {
         dot_xi_x[i]=kernel(0, 0, 0, i);
         dot_yi_x[i]=kernel(1, 0, 0, i);
