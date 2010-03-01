@@ -9,7 +9,7 @@ main()
 {
 	printf("hello world!\n");
 
-	read_problem("triangle");
+	read_problem("data/heart_scale");
 
 	printf(" %d \n", prob[0].l);
 

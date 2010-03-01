@@ -1,2 +1,2 @@
 all:
-	nvcc -deviceemu main.c readsvm.c cuda_main.cu
+	nvcc -g main.c readsvm.c cuda_main.cu
