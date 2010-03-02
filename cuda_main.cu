@@ -40,8 +40,10 @@ extern "C" void run_cuda_kernel()
 
   // set number of blocks, and threads per block
 
-  nblocks  = (prob[0].l + prob[1].l + 1) / 256;
-  nthreads = 256;
+//  nblocks  = (prob[0].l + prob[1].l + 1) / 256;
+//  nthreads = 256;
+  nblocks  = 1;
+  nthreads = prob[0].l + prob[1].l;
 //  nsize    = nblocks*nthreads ;
 
   // allocate memory for array

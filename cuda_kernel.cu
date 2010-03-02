@@ -7,11 +7,20 @@ __device__ float* g_data[2];
 __device__ int maximum_index;
 __device__ int data_size[2];
 __device__ float C;
+__device__ float* g_weights[2];
+__device__ float lambda;
+__device__ int max_p_index;
+__device__ float max_p;
+__device__ int max_q_index;
+__device__ float max_q;
+__device__ float dot_xi_yi; // <x_i, y_i >
+__device__ float dot_xi_xi; // <x_i, x_i >
+__device__ float dot_yi_yi; // <y_i, y_i >
 
 
 __device__ float* get_element(int id, int set);
 __device__ float dot(float* px, float *py)
-{
+{ 
 //    print_vector(px);
 //    print_vector(py);
 	float sum = 0.0;
@@ -138,7 +147,7 @@ __device__ void add_to_weights(float* weights, float lambda, int index, int set)
 __device__ float update_xi_xi(float dot_xi_xi, float* dot_xi_x, int p, int max_p_index, float lambda) {
     dot_xi_xi = lambda * lambda * dot_xi_xi
             + 2 * lambda * (1.0 - lambda) * dot_xi_x[max_p_index]
-            + (1.0 - lambda)*(1.0 - lambda)*kernel(p, max_p_index, p ,max_p_index );
+            + (1.0 - lambda)*(1.0 - lambda)*kernel(p, max_p_index, p ,max_p_index ); //todo: skalarprodukt von vector mit sich selbst zwischenspeichern
     return dot_xi_xi;
 }
 
@@ -150,6 +159,8 @@ __device__ float update_xi_yi(float dot_xi_yi, float* dot_yi_x, int max_p_index,
 __device__ void update_xi_x(float* dot_xi_x, int p, int p2, int max_p_index, float lambda) {
     //printf("update_xi_x(): %d %d %d \n", p, p2, max_p_index);
     float* computed_kernels = get_element(max_p_index, p);
+
+	//printf("tid = %d \n", tid);
 
     int i;
     for (i=0;i<data_size[p2];i++) {
@@ -299,16 +310,17 @@ float *dot_xi_x, float *dot_yi_x, float *dot_xi_y, float *dot_yi_y,
 	int t_set;
 	int t_element;
 
-	if(tid <= g_data0_size)
+	if(tid < g_data0_size)
 		t_set = 0;
 	else
 		t_set = 1;
 
-	t_element = tid - (1 - t_set) * g_data0_size;
+	t_element = tid - (t_set) * g_data0_size;
+	//printf("t_set = %d  t_element = %d \n", t_set, t_element);
 
 if(tid < g_data0_size + g_data1_size)
 {
-	float* g_weights[2];
+
 
 if(tid == 0) {
 	// cache initialisieren
@@ -348,17 +360,23 @@ if(tid == 0) {
 
 	g_weights[0] = g_weights0;
 	g_weights[1] = g_weights1;
-}
+//}
 
     // initialize weights  -- 0 == x, 1 == y
-/*    int i;
-    for (i=0;i<data_size[0];i++)
+    int i;
+    for (i=0;i<data_size[0];i++) {
         g_weights[0][i] = 0.0;
+//		printf(" 0  %d \n", i);
+	}
 
-    for (i=0;i<data_size[1];i++)
+    for (i=0;i<data_size[1];i++) {
         g_weights[1][i] = 0.0;
-*/
+//		printf(" 1  %d \n", i);
+	}
+}
 	g_weights[t_set][t_element] = 0.0;
+
+	__syncthreads();
 
 if(tid == 0) {
     g_weights[0][0] = 1.0;
@@ -368,12 +386,12 @@ if(tid == 0) {
     // deklaration der variablen die werte zwischenspeichern
     //float *dot_xi_x; // < x_i, x> \forall x \in P
     //float *dot_yi_x;  // < y_i, x> \forall x \in P
-    float dot_xi_yi; // <x_i, y_i >
-    float dot_xi_xi; // <x_i, x_i >
+    //float dot_xi_yi; // <x_i, y_i >
+    //float dot_xi_xi; // <x_i, x_i >
 
     //float *dot_yi_y; // < y_i, y> \forall y \in Q
     //float *dot_xi_y;  // < x_i, y> \forall y \in Q
-    float dot_yi_yi; // <y_i, y_i >
+    //float dot_yi_yi; // <y_i, y_i >
 
 
     // speicher anfordern 
@@ -395,22 +413,21 @@ if(tid == 0) {
     dot_yi_yi = kernel(1, 0, 1, 0);
 
     // find max
-    int max_p_index;
-    float max_p;
     max_p_index = find_max(0, dot_yi_x, dot_xi_x, dot_xi_yi, dot_xi_xi, &max_p);
 
-    int max_q_index;
-    float max_q;
-    max_q_index = find_max(1, dot_xi_y, dot_yi_y, dot_xi_yi, dot_yi_yi, &max_q);
 
+    max_q_index = find_max(1, dot_xi_y, dot_yi_y, dot_xi_yi, dot_yi_yi, &max_q);
+}
     int j;
+
 
     for (j=0;j<10 ;j++)
     {
         //printf("j = %d \n", j);
-        float lambda;
+
         if (max_p >= max_q)
         {
+			if(tid == 0) {
             float zaehler = compute_zaehler(dot_xi_yi, dot_yi_x, dot_xi_x, 0, max_p_index);
             float nenner = compute_nenner(dot_xi_xi, dot_xi_x, 0, max_p_index);
 
@@ -423,11 +440,14 @@ if(tid == 0) {
             add_to_weights(g_weights[0], lambda, max_p_index, 0);
 
             // update dotproducts
-
+			
             dot_xi_xi = update_xi_xi(dot_xi_xi, dot_xi_x, 0, max_p_index, lambda);
 
             dot_xi_yi = update_xi_yi(dot_xi_yi, dot_yi_x, max_p_index, lambda);
+			}
 
+			__syncthreads(); //damit auch alle threads das aktuelle lambda haben.
+			
             //printf("max_p: \n");
             update_xi_x(dot_xi_x, 0, 0, max_p_index, lambda);
 
@@ -436,6 +456,7 @@ if(tid == 0) {
         }
         else
         {
+			if(tid == 0) {
             double zaehler = compute_zaehler(dot_xi_yi, dot_xi_y, dot_yi_y, 1, max_q_index);
             double nenner = compute_nenner(dot_yi_yi, dot_yi_y, 1, max_q_index);
 
@@ -452,6 +473,9 @@ if(tid == 0) {
             dot_yi_yi = update_xi_xi(dot_yi_yi, dot_yi_y, 1, max_q_index, lambda);
 
             dot_xi_yi = update_xi_yi(dot_xi_yi, dot_xi_y, max_q_index, lambda);
+			}
+
+			__syncthreads(); //damit auch alle threads das aktuelle lambda haben.
 
             //printf("max_q: \n");
             update_xi_x(dot_yi_y, 1, 1, max_q_index, lambda);
@@ -459,6 +483,9 @@ if(tid == 0) {
             update_xi_x(dot_yi_x, 1, 0, max_q_index, lambda);
         //printf("max_p = %f  max_q = %f zaehler = %f nenner = %f lambda = %f\n", max_p, max_q, zaehler, nenner, lambda);
         }
+
+		if(tid == 0)
+		{
         // find max
         max_p_index = find_max(0, dot_yi_x, dot_xi_x, dot_xi_yi, dot_xi_xi, &max_p);
         max_q_index = find_max(1, dot_xi_y, dot_yi_y, dot_xi_yi, dot_yi_yi, &max_q);
