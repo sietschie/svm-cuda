@@ -156,9 +156,9 @@ __device__ float update_xi_yi(float dot_xi_yi, float* dot_yi_x, int max_p_index,
     return dot_xi_yi;
 }
 
-__device__ void update_xi_x(float* dot_xi_x, int p, int p2, int max_p_index, float lambda) {
+__device__ void update_xi_x(float* dot_xi_x, int p, int p2, int max_p_index, float lambda, float* computed_kernels ) {
     //printf("update_xi_x(): %d %d %d \n", p, p2, max_p_index);
-    float* computed_kernels = get_element(max_p_index, p);
+
 
 	//printf("tid = %d \n", tid);
 
@@ -449,9 +449,12 @@ if(tid == 0) {
 			__syncthreads(); //damit auch alle threads das aktuelle lambda haben.
 			
             //printf("max_p: \n");
-            update_xi_x(dot_xi_x, 0, 0, max_p_index, lambda);
 
-            update_xi_x(dot_xi_y, 0, 1, max_p_index, lambda);
+		    float* computed_kernels = get_element(max_p_index, 0);
+
+            update_xi_x(dot_xi_x, 0, 0, max_p_index, lambda, computed_kernels);
+
+            update_xi_x(dot_xi_y, 0, 1, max_p_index, lambda, computed_kernels);
         //printf("max_p = %f  max_q = %f zaehler = %f nenner = %f lambda = %f\n", max_p, max_q, zaehler, nenner, lambda);
         }
         else
@@ -470,6 +473,7 @@ if(tid == 0) {
 
             // update dotproducts
 
+
             dot_yi_yi = update_xi_xi(dot_yi_yi, dot_yi_y, 1, max_q_index, lambda);
 
             dot_xi_yi = update_xi_yi(dot_xi_yi, dot_xi_y, max_q_index, lambda);
@@ -478,9 +482,11 @@ if(tid == 0) {
 			__syncthreads(); //damit auch alle threads das aktuelle lambda haben.
 
             //printf("max_q: \n");
-            update_xi_x(dot_yi_y, 1, 1, max_q_index, lambda);
+		    float* computed_kernels = get_element(max_q_index, 1);
 
-            update_xi_x(dot_yi_x, 1, 0, max_q_index, lambda);
+            update_xi_x(dot_yi_y, 1, 1, max_q_index, lambda, computed_kernels);
+
+            update_xi_x(dot_yi_x, 1, 0, max_q_index, lambda, computed_kernels);
         //printf("max_p = %f  max_q = %f zaehler = %f nenner = %f lambda = %f\n", max_p, max_q, zaehler, nenner, lambda);
         }
 
