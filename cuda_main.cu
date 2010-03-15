@@ -138,6 +138,11 @@ extern "C" void run_cuda_kernel()
 
     float* d_data_cache;
 	cudaMalloc( (void**) &d_data_cache, sizeof( float* ) * nr_of_cache_entries * nr_of_elements);
+    
+    int temp_size = 2;//prob[1].l ;
+    float* d_temp;
+	cudaMalloc( (void**) &d_temp, sizeof( float* ) * temp_size);
+
 
 
 
@@ -147,9 +152,13 @@ extern "C" void run_cuda_kernel()
 									d_weights[0], d_weights[1],
 									d_dot_xi_x, d_dot_yi_x, d_dot_xi_y, d_dot_yi_y,
 									nr_of_cache_entries, nr_of_elements,
-									d_look_up_table, d_reverse_look_up_table, d_circular_array, d_data_cache);
+									d_look_up_table, d_reverse_look_up_table, d_circular_array, d_data_cache, d_temp);
 
-  // copy back results and print them out
+  // copy back results and print them 
+
+  float h_temp[temp_size];
+
+  cudaMemcpy( &h_temp, d_temp, sizeof(float) * temp_size, cudaMemcpyDeviceToHost);
 
   cudaMemcpy(h_weights[0],d_weights[0],sizeof(float) * prob[0].l,cudaMemcpyDeviceToHost);
   cudaMemcpy(h_weights[1],d_weights[1],sizeof(float) * prob[1].l,cudaMemcpyDeviceToHost);
@@ -168,5 +177,11 @@ extern "C" void run_cuda_kernel()
 
 //  cudaFree(d_x);
 //  free(h_x);
+
+  //printf(" temp = %f  \n ", h_temp);
+  for(int i = 0; i<temp_size; i++)
+  {
+    printf(" %d : %f \n", i, h_temp[i]);
+  }
 
 }
