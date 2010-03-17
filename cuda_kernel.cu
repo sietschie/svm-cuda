@@ -375,33 +375,11 @@ __device__ float* get_element(int id, int set, int tid)
 
 // cache ende
 
-
-
-__global__ void
-cuda_kernel( float* g_data0, float* g_data1 , int g_maximum_index, int g_data0_size, int g_data1_size, float* g_weights0, float* g_weights1 ,
+__global__ void cuda_kernel_init(float* g_data0, float* g_data1 , int g_maximum_index, int g_data0_size, int g_data1_size, float* g_weights0, float* g_weights1 ,
              float *dot_xi_x, float *dot_yi_x, float *dot_xi_y, float *dot_yi_y,
              int g_nr_of_cache_entries, int g_nr_of_elements,
-             int *g_look_up_table, int* g_reverse_look_up_table, int* g_circular_array, float* g_data_cache, float* g_temp) //todo: bessere namen fuer cache-variablen finden.
+             int *g_look_up_table, int* g_reverse_look_up_table, int* g_circular_array, float* g_data_cache, float* g_temp)
 {
-    //temp = g_temp;
-    int tid = threadIdx.x + blockDim.x*blockIdx.x;
-    int t_set;
-    int t_element;
-
-    if(tid < g_data0_size)
-        t_set = 0;
-    else
-        t_set = 1;
-
-    t_element = tid - (t_set) * g_data0_size;
-    //printf("t_set = %d  t_element = %d \n", t_set, t_element);
-
-
-    if(tid < g_data0_size + g_data1_size)
-    {
-
-
-        if(tid == 0) {
             // cache initialisieren
             look_up_table = g_look_up_table;
             reverse_look_up_table = g_reverse_look_up_table;
@@ -451,13 +429,8 @@ cuda_kernel( float* g_data0, float* g_data1 , int g_maximum_index, int g_data0_s
             for (i=0; i<data_size[1]; i++) {
                 g_weights[1][i] = 0.0;
 //		printf(" 1  %d \n", i);
-            }
-        }
-        g_weights[t_set][t_element] = 0.0;
+		}
 
-        __syncthreads();
-
-        if(tid == 0) {
             g_weights[0][0] = 1.0;
             g_weights[1][0] = 1.0;
 
@@ -501,18 +474,14 @@ cuda_kernel( float* g_data0, float* g_data1 , int g_maximum_index, int g_data0_s
 
 
             max_q_index = find_max(1, dot_xi_y, dot_yi_y, dot_xi_yi, dot_yi_yi, &max_q);
-        }
-        int j;
 
 
-        for (j=0; j<10000 ; j++)
-        {
-	__syncthreads();
-            //printf("j = %d, tid = %d \n", j, tid);
+}
 
+__global__ void cuda_kernel_lambda()
+{
             if (max_p >= max_q)
             {
-                if(tid == 0) { 
                     float zaehler = compute_zaehler(dot_xi_yi, dot_yi_x, dot_xi_x, 0, max_p_index, g_temp);
                     float nenner = compute_nenner(dot_xi_xi, dot_xi_x, 0, max_p_index);
 
@@ -530,31 +499,7 @@ cuda_kernel( float* g_data0, float* g_data1 , int g_maximum_index, int g_data0_s
                     dot_xi_xi = update_xi_xi(dot_xi_xi, dot_xi_x, 0, max_p_index, lambda);
 
                     dot_xi_yi = update_xi_yi(dot_xi_yi, dot_yi_x, max_p_index, lambda);
-                }
-
-                __syncthreads(); //damit auch alle threads das aktuelle lambda haben.
-
-                //printf("max_p: \n");
-
-                //float* computed_kernels = get_element(max_p_index, 0);
-        	
-		if(tid < data_size[0]) {
-			g_data_cache[tid] = kernel(0, max_p_index, 0, tid);
-        	} else {
-			g_data_cache[tid] = kernel(0, max_p_index, 1, tid - data_size[0]);
-    		}
-
-		float* computed_kernels = g_data_cache;
-                
-
-                update_xi_x(dot_xi_x, 0, 0, max_p_index, lambda, computed_kernels, tid);
-
-                update_xi_x(dot_xi_y, 0, 1, max_p_index, lambda, computed_kernels, tid);
-                //printf("max_p = %f  max_q = %f zaehler = %f nenner = %f lambda = %f\n", max_p, max_q, zaehler, nenner, lambda);
-            }
-            else
-            {
-                if(tid == 0) { 
+                } else { 
                     double zaehler = compute_zaehler(dot_xi_yi, dot_xi_y, dot_yi_y, 1, max_q_index, g_temp);
                     double nenner = compute_nenner(dot_yi_yi, dot_yi_y, 1, max_q_index);
 
@@ -576,21 +521,39 @@ cuda_kernel( float* g_data0, float* g_data1 , int g_maximum_index, int g_data0_s
                     dot_xi_yi = update_xi_yi(dot_xi_yi, dot_xi_y, max_q_index, lambda);
                 }
 
+}
 
-                __syncthreads(); //damit auch alle threads das aktuelle lambda haben.
-                //printf("max_q: \n");
-                //float* computed_kernels = get_element(max_q_index, 1);
+__global__ cuda_kernel_computekernels()
+{
+    if(tid < g_data0_size + g_data1_size) // falls etwas mehr threads als noetig gestartet wurden  
+    {
+    int tid = threadIdx.x + blockDim.x*blockIdx.x;
+    int t_set;
+    int t_element;
 
-    //int i;
-    //for(i=0; i<data_size[0]; i++)
-    //{
-        //printf("set1 = %d, id = %d,  set2 = %d, id = %d res = %f\n", set, id, 0, i,  kernel(set, id, 0, i));
-    //}
+    if(tid < g_data0_size)
+        t_set = 0;
+    else
+        t_set = 1;
 
-    //for(i=0; i<data_size[1]; i++)
-    //{
-        //printf("set1 = %d, id = %d,  set2 = %d, id = %d   res = %f \n", set, id, 1, i,  kernel(set, id, 1, i));
-        	if(tid < data_size[0]) {
+    t_element = tid - (t_set) * g_data0_size;
+
+            if (max_p >= max_q)
+            {
+		if(tid < data_size[0]) {
+			g_data_cache[tid] = kernel(0, max_p_index, 0, tid);
+        	} else {
+			g_data_cache[tid] = kernel(0, max_p_index, 1, tid - data_size[0]);
+    		}
+
+		float* computed_kernels = g_data_cache;
+                
+
+                update_xi_x(dot_xi_x, 0, 0, max_p_index, lambda, computed_kernels, tid);
+
+                update_xi_x(dot_xi_y, 0, 1, max_p_index, lambda, computed_kernels, tid);
+	} else {
+       	if(tid < data_size[0]) {
 			g_data_cache[tid] = kernel(1, max_q_index, 0, tid);
         	} else {
 			g_data_cache[tid] = kernel(1, max_q_index, 1, tid - data_size[0]);
@@ -600,20 +563,16 @@ cuda_kernel( float* g_data0, float* g_data1 , int g_maximum_index, int g_data0_s
 
 
 		__syncthreads();
-		//temp[tid] = 14.4; //dot_yi_y[tid];
-		//temp[tid] = 234.56;
                 update_xi_x_d(dot_yi_y, 1, 1, max_q_index, lambda, computed_kernels, tid);
-		//temp[tid] = dot_yi_y[tid - data_size[0]];
-		//temp[tid] = dot_yi_y[tid];
 
 
                 update_xi_x(dot_yi_x, 1, 0, max_q_index, lambda, computed_kernels, tid);
-                //printf("max_p = %f  max_q = %f zaehler = %f nenner = %f lambda = %f\n", max_p, max_q, zaehler, nenner, lambda);
-            }
+}}
+}
 
-            __syncthreads(); //damit auch alle threads das aktuelle lambda haben.
-            if(tid == 0)
-            {
+
+__global__ void cuda_kernel_distance()
+{
                 // find max
                 max_p_index = find_max_d(0, dot_yi_x, dot_xi_x, dot_xi_yi, dot_xi_xi, &max_p);
                 max_q_index = find_max(1, dot_xi_y, dot_yi_y, dot_xi_yi, dot_yi_yi, &max_q);
@@ -660,6 +619,62 @@ cuda_kernel( float* g_data0, float* g_data1 , int g_maximum_index, int g_data0_s
                 float rho = dot_xi_yi - dot_xi_xi - (dot_xi_xi + dot_yi_yi - 2 * dot_xi_yi)/2;
                 //printf("xi_xi = %f   yi_yi = %f   xi_yi = %f \n", dot_xi_xi, dot_yi_yi, dot_xi_yi);
 
+
+}
+
+__global__ void
+cuda_kernel( ) //todo: bessere namen fuer cache-variablen finden.
+{
+    //temp = g_temp;
+
+    //printf("t_set = %d  t_element = %d \n", t_set, t_element);
+
+
+        int j;
+
+
+//        for (j=0; j<10000 ; j++)
+//        {
+//	__syncthreads();
+            //printf("j = %d, tid = %d \n", j, tid);
+
+            if (max_p >= max_q)
+            {
+
+                __syncthreads(); //damit auch alle threads das aktuelle lambda haben.
+
+                //printf("max_p: \n");
+
+                //float* computed_kernels = get_element(max_p_index, 0);
+        	
+
+                //printf("max_p = %f  max_q = %f zaehler = %f nenner = %f lambda = %f\n", max_p, max_q, zaehler, nenner, lambda);
+            }
+            else
+            {
+                if(tid == 0) 
+
+
+                __syncthreads(); //damit auch alle threads das aktuelle lambda haben.
+                //printf("max_q: \n");
+                //float* computed_kernels = get_element(max_q_index, 1);
+
+    //int i;
+    //for(i=0; i<data_size[0]; i++)
+    //{
+        //printf("set1 = %d, id = %d,  set2 = %d, id = %d res = %f\n", set, id, 0, i,  kernel(set, id, 0, i));
+    //}
+
+    //for(i=0; i<data_size[1]; i++)
+    //{
+        //printf("set1 = %d, id = %d,  set2 = %d, id = %d   res = %f \n", set, id, 1, i,  kernel(set, id, 1, i));
+ 
+                //printf("max_p = %f  max_q = %f zaehler = %f nenner = %f lambda = %f\n", max_p, max_q, zaehler, nenner, lambda);
+            }
+
+            __syncthreads(); //damit auch alle threads das aktuelle lambda haben.
+            if(tid == 0)
+            {
             }
         }
     }
