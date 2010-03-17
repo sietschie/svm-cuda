@@ -16,6 +16,11 @@ __device__ float max_q;
 __device__ float dot_xi_yi; // <x_i, y_i >
 __device__ float dot_xi_xi; // <x_i, x_i >
 __device__ float dot_yi_yi; // <y_i, y_i >
+__device__ float* dot_xi_x;
+__device__ float* dot_yi_x;
+__device__ float* dot_xi_y;
+__device__ float* dot_yi_y;
+
 __device__ float* temp;
 
 __device__ float* get_element(int id, int set);
@@ -173,7 +178,7 @@ __device__ int find_max_d(int p, float *dot_yi_x, float* dot_xi_x, float dot_xi_
 }
 
 
-__device__ float compute_zaehler(float dot_xi_yi, float* dot_yi_x, float* dot_xi_x, int p, int max_p_index , float* g_temp) {
+__device__ float compute_zaehler(float dot_xi_yi, float* dot_yi_x, float* dot_xi_x, int p, int max_p_index ) {
     /*g_temp[0] = dot_xi_yi;
     g_temp[1] = dot_yi_x[max_p_index];
     g_temp[2] = dot_xi_x[max_p_index];
@@ -376,9 +381,9 @@ __device__ float* get_element(int id, int set, int tid)
 // cache ende
 
 __global__ void cuda_kernel_init(float* g_data0, float* g_data1 , int g_maximum_index, int g_data0_size, int g_data1_size, float* g_weights0, float* g_weights1 ,
-             float *dot_xi_x, float *dot_yi_x, float *dot_xi_y, float *dot_yi_y,
+             float *g_dot_xi_x, float *g_dot_yi_x, float *g_dot_xi_y, float *g_dot_yi_y,
              int g_nr_of_cache_entries, int g_nr_of_elements,
-             int *g_look_up_table, int* g_reverse_look_up_table, int* g_circular_array, float* g_data_cache, float* g_temp)
+             int *g_look_up_table, int* g_reverse_look_up_table, int* g_circular_array, float* g_data_cache, float* g_temp) //todo: bessere variablennamen fuer cache zeugs finden finden
 {
             // cache initialisieren
             look_up_table = g_look_up_table;
@@ -388,6 +393,12 @@ __global__ void cuda_kernel_init(float* g_data0, float* g_data1 , int g_maximum_
 
             nr_of_cache_entries = g_nr_of_cache_entries;
             nr_of_elements = g_nr_of_elements;
+
+			dot_xi_x = g_dot_xi_x;
+			dot_yi_x = g_dot_yi_x;
+			dot_xi_y = g_dot_xi_y;
+			dot_yi_y = g_dot_yi_y;
+
 
             // init pointer
             ca_first = 0;
@@ -449,7 +460,6 @@ __global__ void cuda_kernel_init(float* g_data0, float* g_data1 , int g_maximum_
             // speicher anfordern
 
             // initialisieren
-            int i;
 
             //dot_xi_x[0]=kernel_d(0, 0, 0, 0);
 
@@ -482,7 +492,7 @@ __global__ void cuda_kernel_lambda()
 {
             if (max_p >= max_q)
             {
-                    float zaehler = compute_zaehler(dot_xi_yi, dot_yi_x, dot_xi_x, 0, max_p_index, g_temp);
+                    float zaehler = compute_zaehler(dot_xi_yi, dot_yi_x, dot_xi_x, 0, max_p_index);
                     float nenner = compute_nenner(dot_xi_xi, dot_xi_x, 0, max_p_index);
 
                     lambda = zaehler / nenner;
@@ -500,7 +510,7 @@ __global__ void cuda_kernel_lambda()
 
                     dot_xi_yi = update_xi_yi(dot_xi_yi, dot_yi_x, max_p_index, lambda);
                 } else { 
-                    double zaehler = compute_zaehler(dot_xi_yi, dot_xi_y, dot_yi_y, 1, max_q_index, g_temp);
+                    double zaehler = compute_zaehler(dot_xi_yi, dot_xi_y, dot_yi_y, 1, max_q_index);
                     double nenner = compute_nenner(dot_yi_yi, dot_yi_y, 1, max_q_index);
 
                     lambda = zaehler / nenner;
@@ -523,30 +533,31 @@ __global__ void cuda_kernel_lambda()
 
 }
 
-__global__ cuda_kernel_computekernels()
+__global__ void cuda_kernel_computekernels()
 {
-    if(tid < g_data0_size + g_data1_size) // falls etwas mehr threads als noetig gestartet wurden  
-    {
     int tid = threadIdx.x + blockDim.x*blockIdx.x;
+
+    if(tid < data_size[0] + data_size[1]) // falls etwas mehr threads als noetig gestartet wurden  
+    {
     int t_set;
     int t_element;
 
-    if(tid < g_data0_size)
+    if(tid < data_size[0])
         t_set = 0;
     else
         t_set = 1;
 
-    t_element = tid - (t_set) * g_data0_size;
+    t_element = tid - (t_set) * data_size[0];
 
             if (max_p >= max_q)
             {
 		if(tid < data_size[0]) {
-			g_data_cache[tid] = kernel(0, max_p_index, 0, tid);
+			data[tid] = kernel(0, max_p_index, 0, tid);
         	} else {
-			g_data_cache[tid] = kernel(0, max_p_index, 1, tid - data_size[0]);
+			data[tid] = kernel(0, max_p_index, 1, tid - data_size[0]);
     		}
 
-		float* computed_kernels = g_data_cache;
+		float* computed_kernels = data; //todo: cache einbauen
                 
 
                 update_xi_x(dot_xi_x, 0, 0, max_p_index, lambda, computed_kernels, tid);
@@ -554,15 +565,15 @@ __global__ cuda_kernel_computekernels()
                 update_xi_x(dot_xi_y, 0, 1, max_p_index, lambda, computed_kernels, tid);
 	} else {
        	if(tid < data_size[0]) {
-			g_data_cache[tid] = kernel(1, max_q_index, 0, tid);
+			data[tid] = kernel(1, max_q_index, 0, tid);
         	} else {
-			g_data_cache[tid] = kernel(1, max_q_index, 1, tid - data_size[0]);
+			data[tid] = kernel(1, max_q_index, 1, tid - data_size[0]);
     		}
 		
-		float* computed_kernels = g_data_cache;
+		float* computed_kernels = data;
 
 
-		__syncthreads();
+		
                 update_xi_x_d(dot_yi_y, 1, 1, max_q_index, lambda, computed_kernels, tid);
 
 
@@ -578,8 +589,6 @@ __global__ void cuda_kernel_distance()
                 max_q_index = find_max(1, dot_xi_y, dot_yi_y, dot_xi_yi, dot_yi_yi, &max_q);
 		
 
-		g_temp[0] = max_p_index;
-		g_temp[1] = max_q_index;
                 
 		//duality gap
                 // absolute duality gap
@@ -620,71 +629,6 @@ __global__ void cuda_kernel_distance()
                 //printf("xi_xi = %f   yi_yi = %f   xi_yi = %f \n", dot_xi_xi, dot_yi_yi, dot_xi_yi);
 
 
-}
-
-__global__ void
-cuda_kernel( ) //todo: bessere namen fuer cache-variablen finden.
-{
-    //temp = g_temp;
-
-    //printf("t_set = %d  t_element = %d \n", t_set, t_element);
-
-
-        int j;
-
-
-//        for (j=0; j<10000 ; j++)
-//        {
-//	__syncthreads();
-            //printf("j = %d, tid = %d \n", j, tid);
-
-            if (max_p >= max_q)
-            {
-
-                __syncthreads(); //damit auch alle threads das aktuelle lambda haben.
-
-                //printf("max_p: \n");
-
-                //float* computed_kernels = get_element(max_p_index, 0);
-        	
-
-                //printf("max_p = %f  max_q = %f zaehler = %f nenner = %f lambda = %f\n", max_p, max_q, zaehler, nenner, lambda);
-            }
-            else
-            {
-                if(tid == 0) 
-
-
-                __syncthreads(); //damit auch alle threads das aktuelle lambda haben.
-                //printf("max_q: \n");
-                //float* computed_kernels = get_element(max_q_index, 1);
-
-    //int i;
-    //for(i=0; i<data_size[0]; i++)
-    //{
-        //printf("set1 = %d, id = %d,  set2 = %d, id = %d res = %f\n", set, id, 0, i,  kernel(set, id, 0, i));
-    //}
-
-    //for(i=0; i<data_size[1]; i++)
-    //{
-        //printf("set1 = %d, id = %d,  set2 = %d, id = %d   res = %f \n", set, id, 1, i,  kernel(set, id, 1, i));
- 
-                //printf("max_p = %f  max_q = %f zaehler = %f nenner = %f lambda = %f\n", max_p, max_q, zaehler, nenner, lambda);
-            }
-
-            __syncthreads(); //damit auch alle threads das aktuelle lambda haben.
-            if(tid == 0)
-            {
-            }
-        }
-    }
-//	struct svm_problem d_prob[2];
-
-//	int *test;
-//	cudaMalloc( (void**) &test, 100 * sizeof(int) );
-
-//	int tid = threadIdx.x + blockDim.x*blockIdx.x;
-//	g_data[tid] = tid;
 }
 
 #endif // #ifndef _CUDA_KERNEL_H_
