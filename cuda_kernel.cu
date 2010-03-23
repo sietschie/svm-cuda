@@ -613,7 +613,7 @@ __global__ void cuda_kernel_computekernels()
 
 			float* computed_kernels = data;
 
-			update_xi_x_d(dot_yi_y, 1, 1, max_q_index, lambda, computed_kernels, tid);
+			update_xi_x(dot_yi_y, 1, 1, max_q_index, lambda, computed_kernels, tid);
 
 			update_xi_x(dot_yi_x, 1, 0, max_q_index, lambda, computed_kernels, tid);
 		}
@@ -624,7 +624,7 @@ __global__ void cuda_kernel_computekernels()
 __global__ void cuda_kernel_distance()
 {
 	// find max
-	max_p_index = find_max_d(0, dot_yi_x, dot_xi_x, dot_xi_yi, dot_xi_xi, &max_p);
+	max_p_index = find_max(0, dot_yi_x, dot_xi_x, dot_xi_yi, dot_xi_xi, &max_p);
 	max_q_index = find_max(1, dot_xi_y, dot_yi_y, dot_xi_yi, dot_yi_yi, &max_q);
 
 	//duality gap

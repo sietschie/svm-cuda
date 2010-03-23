@@ -12,6 +12,36 @@
 
 #include "cuda_kernel.cu"
 
+#define cutilCheckMsg(msg)           __cutilCheckMsg     (msg, __FILE__, __LINE__)
+
+inline void __cutilCheckMsg( const char *errorMessage, const char *file, const int line )
+{
+    cudaError_t err = cudaGetLastError();
+    if( cudaSuccess != err) {
+        fprintf(stderr, "cutilCheckMsg() CUTIL CUDA error: %s in file <%s>, line %i : %s.\n",
+                errorMessage, file, line, cudaGetErrorString( err) );
+        exit(-1);
+    }
+#ifdef _DEBUG
+    err = cudaThreadSynchronize();
+    if( cudaSuccess != err) {
+        fprintf(stderr, "cutilCheckMsg cudaThreadSynchronize error: %s in file <%s>, line %i : %s.\n",
+                errorMessage, file, line, cudaGetErrorString( err) );
+        exit(-1);
+    }
+#endif
+}
+
+#  define CUDA_SAFE_CALL_NO_SYNC( call) {                                    \
+    cudaError err = call;                                                    \
+    if( cudaSuccess != err) {                                                \
+        fprintf(stderr, "Cuda error in file '%s' in line %i : %s.\n",        \
+                __FILE__, __LINE__, cudaGetErrorString( err) );              \
+        exit(EXIT_FAILURE);                                                  \
+    } }
+
+#  define CUDA_SAFE_CALL( call)     CUDA_SAFE_CALL_NO_SYNC(call);  
+
 #define cutilSafeCall(err)           __cudaSafeCall      (err, __FILE__, __LINE__)
 inline void __cudaSafeCall( cudaError err, const char *file, const int line )
 {
@@ -40,10 +70,10 @@ extern "C" void run_cuda_kernel()
 
   // set number of blocks, and threads per block
 
-//  nblocks  = (prob[0].l + prob[1].l + 1) / 256;
-//  nthreads = 256;
-  nblocks  = 1;
-  nthreads = prob[0].l + prob[1].l;
+  nblocks  = (prob[0].l + prob[1].l + 1) / 256;
+  nthreads = 256;
+//  nblocks  = 1;
+//  nthreads = prob[0].l + prob[1].l;
 //  nsize    = nblocks*nthreads ;
 
   // allocate memory for array
@@ -153,11 +183,19 @@ extern "C" void run_cuda_kernel()
 									d_dot_xi_x, d_dot_yi_x, d_dot_xi_y, d_dot_yi_y,
 									nr_of_cache_entries, nr_of_elements,
 									d_look_up_table, d_reverse_look_up_table, d_circular_array, d_data_cache, d_temp);
-cudaThreadSynchronize();
-	cuda_kernel_lambda<<<1, 1>>>();
-cudaThreadSynchronize();
-	cuda_kernel_computekernels<<<nblocks, nthreads>>>();
-cudaThreadSynchronize();	//cuda_kernel_distance<<<1, 1>>>();
+	cudaThreadSynchronize();
+	for(int i = 0; i<2; i++){
+		cuda_kernel_lambda<<<1, 1>>>();
+		cudaThreadSynchronize();
+		cuda_kernel_computekernels<<<nblocks, nthreads>>>();
+
+    // check if kernel execution generated and error
+    cutilCheckMsg("Kernel execution failed");
+
+		cudaThreadSynchronize();
+		cuda_kernel_distance<<<1, 1>>>();
+		cudaThreadSynchronize();
+	}
 
 
   // copy back results and print them 
