@@ -493,6 +493,8 @@ int *g_look_up_table, int* g_reverse_look_up_table, int* g_circular_array, float
 
 	//dot_xi_x[0]=kernel_d(0, 0, 0, 0);
 
+	// diese stelle ist viel zu langsam:
+
 	for (i=0; i<data_size[0]; i++)
 	{
 		dot_xi_x[i]=kernel(0, 0, 0, i);
