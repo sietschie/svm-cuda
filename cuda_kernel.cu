@@ -412,7 +412,7 @@ __device__ float* get_element(int id, int set, int tid)
 
 // cache ende
 
-__global__ void cuda_kernel_init(float* g_data0, float* g_data1 , int g_maximum_index, int g_data0_size, int g_data1_size, float* g_weights0, float* g_weights1 ,
+__global__ void cuda_kernel_init_pointer(float* g_data0, float* g_data1 , int g_maximum_index, int g_data0_size, int g_data1_size, float* g_weights0, float* g_weights1 ,
 float *g_dot_xi_x, float *g_dot_yi_x, float *g_dot_xi_y, float *g_dot_yi_y,
 int g_nr_of_cache_entries, int g_nr_of_elements,
 								 //todo: bessere variablennamen fuer cache zeugs finden finden
@@ -458,24 +458,29 @@ int *g_look_up_table, int* g_reverse_look_up_table, int* g_circular_array, float
 
 	g_weights[0] = g_weights0;
 	g_weights[1] = g_weights1;
-	//}
 
-	// initialize weights  -- 0 == x, 1 == y
-	int i;
-	for (i=0; i<data_size[0]; i++)
+}
+
+__global__ void cuda_kernel_init_kernel()
+{
+	int tid = threadIdx.x + blockDim.x*blockIdx.x;
+
+	// falls etwas mehr threads als noetig gestartet wurden
+	if(tid < data_size[0] + data_size[1])
 	{
-		g_weights[0][i] = 0.0;
-		//		printf(" 0  %d \n", i);
-	}
+		int t_set;
+		int t_element;
 
-	for (i=0; i<data_size[1]; i++)
-	{
-		g_weights[1][i] = 0.0;
-		//		printf(" 1  %d \n", i);
-	}
+		if(tid < data_size[0])
+			t_set = 0;
+		else
+			t_set = 1;
 
-	g_weights[0][0] = 1.0;
-	g_weights[1][0] = 1.0;
+		t_element = tid - (t_set) * data_size[0];
+
+		g_weights[t_set][t_element] = 0.0;
+
+
 
 	// deklaration der variablen die werte zwischenspeichern
 	//float *dot_xi_x; // < x_i, x> \forall x \in P
@@ -495,19 +500,23 @@ int *g_look_up_table, int* g_reverse_look_up_table, int* g_circular_array, float
 
 	// diese stelle ist viel zu langsam:
 
-	for (i=0; i<data_size[0]; i++)
+	if(t_set == 0) {
+		dot_xi_x[t_element]=kernel(0, 0, t_set, t_element);
+		dot_yi_x[t_element]=kernel(1, 0, t_set, t_element);
+	} else
 	{
-		dot_xi_x[i]=kernel(0, 0, 0, i);
-		dot_yi_x[i]=kernel(1, 0, 0, i);
-
+		dot_xi_y[t_element]=kernel(0, 0, t_set, t_element);
+		dot_yi_y[t_element]=kernel(1, 0, t_set, t_element);
 	}
+}
 
-	for (i=0; i<data_size[1]; i++)
-	{
-		dot_xi_y[i]=kernel(0, 0, 1, i);
-		dot_yi_y[i]=kernel(1, 0, 1, i);
-		//temp[i] = dot_yi_y[i];
-	}
+}
+
+
+__global__ void cuda_kernel_init_findmax()
+{
+	g_weights[0][0] = 1.0;
+	g_weights[1][0] = 1.0;
 
 	dot_xi_xi = kernel(0, 0, 0, 0);
 	dot_xi_yi = kernel(0, 0, 1, 0);

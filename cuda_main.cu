@@ -178,11 +178,17 @@ extern "C" void run_cuda_kernel()
 
   // execute kernel
 
-  cuda_kernel_init<<<1,1>>>(d_data[0], d_data[1], max_index, prob[0].l, prob[1].l, 
+  cuda_kernel_init_pointer<<<1,1>>>(d_data[0], d_data[1], max_index, prob[0].l, prob[1].l, 
 									d_weights[0], d_weights[1],
 									d_dot_xi_x, d_dot_yi_x, d_dot_xi_y, d_dot_yi_y,
 									nr_of_cache_entries, nr_of_elements,
 									d_look_up_table, d_reverse_look_up_table, d_circular_array, d_data_cache, d_temp);
+
+	cudaThreadSynchronize();
+	cuda_kernel_init_kernel<<<nblocks, nthreads>>>();
+	cudaThreadSynchronize();
+	cuda_kernel_init_findmax<<<1, 1>>>();
+
 	cudaThreadSynchronize();
    // check if kernel execution generated and error
     cutilCheckMsg("Kernel execution failed");
