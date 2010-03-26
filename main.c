@@ -9,7 +9,7 @@ main()
 {
 	printf("hello world!\n");
 
-	read_problem("data/a2a.t");
+	read_problem("data/a2a");
 
 	printf(" %d \n", prob[0].l);
 

@@ -184,17 +184,23 @@ extern "C" void run_cuda_kernel()
 									nr_of_cache_entries, nr_of_elements,
 									d_look_up_table, d_reverse_look_up_table, d_circular_array, d_data_cache, d_temp);
 	cudaThreadSynchronize();
+   // check if kernel execution generated and error
+    cutilCheckMsg("Kernel execution failed");
 	for(int i = 0; i<2; i++){
 		cuda_kernel_lambda<<<1, 1>>>();
 		cudaThreadSynchronize();
+   		// check if kernel execution generated and error
+    	cutilCheckMsg("Kernel execution failed");
 		cuda_kernel_computekernels<<<nblocks, nthreads>>>();
 
-    // check if kernel execution generated and error
-    cutilCheckMsg("Kernel execution failed");
-
+ 
 		cudaThreadSynchronize();
+    	// check if kernel execution generated and error
+    	cutilCheckMsg("Kernel execution failed");
 		cuda_kernel_distance<<<1, 1>>>();
 		cudaThreadSynchronize();
+    	// check if kernel execution generated and error
+    	cutilCheckMsg("Kernel execution failed");
 	}
 
 
