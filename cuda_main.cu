@@ -72,6 +72,7 @@ extern "C" void run_cuda_kernel()
 
   nblocks  = (prob[0].l + prob[1].l + 1) / 256;
   nthreads = 256;
+	printf("blocks: %d \n", nblocks);
 //  nblocks  = 1;
 //  nthreads = prob[0].l + prob[1].l;
 //  nsize    = nblocks*nthreads ;
@@ -87,7 +88,6 @@ extern "C" void run_cuda_kernel()
 
 	int i;
 	for(i=0;i<2;i++) {
-
 		int size_of_data = sizeof(float) * prob[i].l * max_index; //sizeof(float) * prob[0].l * max_index;
 
 
@@ -100,13 +100,14 @@ extern "C" void run_cuda_kernel()
 		cutilSafeCall(cudaMalloc((void **)& temp, size_of_data ));
 
 		//printf(" danach: d_data[i] = %d  \n", temp);
-		cudaMalloc((void **)&d_weights[i], sizeof(float) * prob[i].l);
+		cutilSafeCall(cudaMalloc((void **)&d_weights[i], sizeof(float) * prob[i].l));
 		h_weights[i] = (float*) malloc(sizeof(float) * prob[i].l);
 /*
 * @todo : hier mal ein test-todo
 */																			
 		//memset( (void**) h_data[i] , 0, sizeof(float) * prob[i].l * max_index); // 	 \todo : : int 0 == float 0?
 		memset( (void**) h_data_temp , 0, size_of_data); // 	 \todo : : int 0 == float 0?
+		memset( (void**) h_weights[i] , 10, sizeof(float) * prob[i].l); // 	 \todo : : int 0 == float 0?
 		int j;
 		for(j=0;j<prob[i].l; j++)
 		{
@@ -143,11 +144,11 @@ extern "C" void run_cuda_kernel()
 	float *d_dot_xi_x, *d_dot_yi_x;
 	float *d_dot_xi_y, *d_dot_yi_y;
 
-	cudaMalloc((void**) &d_dot_xi_x, prob[0].l * sizeof(float));
-	cudaMalloc((void**) &d_dot_yi_x, prob[0].l * sizeof(float));
+	cutilSafeCall(cudaMalloc((void**) &d_dot_xi_x, prob[0].l * sizeof(float)));
+	cutilSafeCall(cudaMalloc((void**) &d_dot_yi_x, prob[0].l * sizeof(float)));
 
-	cudaMalloc((void**) &d_dot_xi_y, prob[1].l * sizeof(float));
-	cudaMalloc((void**) &d_dot_yi_y, prob[1].l * sizeof(float)); // 	 \todo : : prob.l durch was schoeners  ersetzen?
+	cutilSafeCall(cudaMalloc((void**) &d_dot_xi_y, prob[1].l * sizeof(float)));
+	cutilSafeCall(cudaMalloc((void**) &d_dot_yi_y, prob[1].l * sizeof(float))); // 	 \todo : : prob.l durch was schoeners  ersetzen?
 
 	//cache parameters
 	nr_of_cache_entries = 4;
@@ -155,44 +156,44 @@ extern "C" void run_cuda_kernel()
 
     // allocate memory
     int *d_look_up_table;
-	cudaMalloc((void**) &d_look_up_table, sizeof(int) * nr_of_elements );
-    cudaMemset( d_look_up_table, -1, sizeof(int) * nr_of_elements );
+	cutilSafeCall(cudaMalloc((void**) &d_look_up_table, sizeof(int) * nr_of_elements ));
+    cutilSafeCall(cudaMemset( d_look_up_table, -1, sizeof(int) * nr_of_elements ));
 
     int *d_reverse_look_up_table;
-	cudaMalloc( (void**) &d_reverse_look_up_table, sizeof(int) * nr_of_cache_entries );
-    cudaMemset( d_reverse_look_up_table, -1, sizeof(int) * nr_of_cache_entries );
+	cutilSafeCall(cudaMalloc( (void**) &d_reverse_look_up_table, sizeof(int) * nr_of_cache_entries ));
+    cutilSafeCall(cudaMemset( d_reverse_look_up_table, -1, sizeof(int) * nr_of_cache_entries ));
 
     int *d_circular_array;
-	cudaMalloc( (void**) &d_circular_array, sizeof(int) * nr_of_cache_entries );
-    cudaMemset( d_circular_array, -1, sizeof(int) * nr_of_cache_entries );
+	cutilSafeCall(cudaMalloc( (void**) &d_circular_array, sizeof(int) * nr_of_cache_entries ));
+    cutilSafeCall(cudaMemset( d_circular_array, -1, sizeof(int) * nr_of_cache_entries ));
 
     float* d_data_cache;
-	cudaMalloc( (void**) &d_data_cache, sizeof( float* ) * nr_of_cache_entries * nr_of_elements);
+	cutilSafeCall(cudaMalloc( (void**) &d_data_cache, sizeof( float* ) * nr_of_cache_entries * nr_of_elements));
     
     int temp_size = 2;//prob[1].l ;
     float* d_temp;
-	cudaMalloc( (void**) &d_temp, sizeof( float* ) * temp_size);
+	cutilSafeCall(cudaMalloc( (void**) &d_temp, sizeof( float* ) * temp_size));
 
 
 
 
   // execute kernel
 
-  cuda_kernel_init_pointer<<<1,1>>>(d_data[0], d_data[1], max_index, prob[0].l, prob[1].l, 
+/*  cuda_kernel_init_pointer<<<1,1>>>(d_data[0], d_data[1], max_index, prob[0].l, prob[1].l, 
 									d_weights[0], d_weights[1],
 									d_dot_xi_x, d_dot_yi_x, d_dot_xi_y, d_dot_yi_y,
 									nr_of_cache_entries, nr_of_elements,
 									d_look_up_table, d_reverse_look_up_table, d_circular_array, d_data_cache, d_temp);
-
+*/
 	cudaThreadSynchronize();
-	cuda_kernel_init_kernel<<<nblocks, nthreads>>>();
+//	cuda_kernel_init_kernel<<<nblocks, nthreads>>>();
 	cudaThreadSynchronize();
-	cuda_kernel_init_findmax<<<1, 1>>>();
+//	cuda_kernel_init_findmax<<<1, 1>>>();
 
 	cudaThreadSynchronize();
    // check if kernel execution generated and error
     cutilCheckMsg("Kernel execution failed");
-	for(int i = 0; i<2; i++){
+/*	for(int i = 0; i<0; i++){
 		cuda_kernel_lambda<<<1, 1>>>();
 		cudaThreadSynchronize();
    		// check if kernel execution generated and error
@@ -208,16 +209,16 @@ extern "C" void run_cuda_kernel()
     	// check if kernel execution generated and error
     	cutilCheckMsg("Kernel execution failed");
 	}
-
+*/
 
   // copy back results and print them 
 
   float h_temp[temp_size];
 
-  cudaMemcpy( &h_temp, d_temp, sizeof(float) * temp_size, cudaMemcpyDeviceToHost);
+  cutilSafeCall(cudaMemcpy( &h_temp, d_temp, sizeof(float) * temp_size, cudaMemcpyDeviceToHost));
 
-  cudaMemcpy(h_weights[0],d_weights[0],sizeof(float) * prob[0].l,cudaMemcpyDeviceToHost);
-  cudaMemcpy(h_weights[1],d_weights[1],sizeof(float) * prob[1].l,cudaMemcpyDeviceToHost);
+  cutilSafeCall(cudaMemcpy(h_weights[0],d_weights[0],sizeof(float) * prob[0].l,cudaMemcpyDeviceToHost));
+  cutilSafeCall(cudaMemcpy(h_weights[1],d_weights[1],sizeof(float) * prob[1].l,cudaMemcpyDeviceToHost));
 
 	for(int i=0;i<2;i++){
 		printf("\n h_weights[ %d ]:", i);
@@ -235,9 +236,9 @@ extern "C" void run_cuda_kernel()
 //  free(h_x);
 
   //printf(" temp = %f  \n ", h_temp);
-  for(int i = 0; i<temp_size; i++)
-  {
-    printf(" %d : %f \n", i, h_temp[i]);
-  }
+  //for(int i = 0; i<temp_size; i++)
+  //{
+  //  printf(" %d : %f \n", i, h_temp[i]);
+  //}
 
 }
