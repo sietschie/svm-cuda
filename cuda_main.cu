@@ -170,7 +170,7 @@ extern "C" void run_cuda_kernel()
 	cudaThreadSynchronize();
 	// check if kernel execution generated and error
 	cutilCheckMsg("Kernel execution failed");
-	for(int i = 0; i<10; i++)
+	for(int i = 0; i<100; i++)
 	{
 		cuda_kernel_lambda<<<1, 1>>>();
 		cudaThreadSynchronize();
