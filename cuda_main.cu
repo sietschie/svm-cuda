@@ -69,9 +69,8 @@ inline void __cudaSafeCall( cudaError err, const char *file, const int line )
 extern "C" void run_cuda_kernel()
 {
 
-	printf(" 1 = %d, -1 = %d \n", prob[0].l, prob[1].l);
+	printf(" number of vectors in class 1 = %d and in class 2 = %d \n", prob[0].l, prob[1].l);
 
-	//  float *h_x, *d_x;
 	int   nblocks, nthreads;	 //, nsize, n;
 
 	// set number of blocks, and threads per block
@@ -79,13 +78,9 @@ extern "C" void run_cuda_kernel()
 	nblocks  = ((prob[0].l + prob[1].l) / 256) + 1;
 	nthreads = 256;
 	printf("blocks: %d \n", nblocks);
-	//  nblocks  = 1;
-	//  nthreads = prob[0].l + prob[1].l;
-	//  nsize    = nblocks*nthreads ;
 
 	// allocate memory for array
 
-	//float* h_data[2];
 	float* d_data[2];
 	float* d_weights[2];
 	float* h_weights[2];
@@ -93,25 +88,18 @@ extern "C" void run_cuda_kernel()
 	int i;
 	for(i=0;i<2;i++)
 	{
-								 //sizeof(float) * prob[0].l * max_index;
 		int size_of_data = sizeof(float) * prob[i].l * max_index;
 
 		float* temp;
-		//h_data[i] =  (float*) malloc(sizeof(float) * prob[i].l * max_index);
 		float *h_data_temp =  (float*) malloc(size_of_data);
-		//printf(" d_data[i] = %d ", temp);
-		//cutilSafeCall(cudaMalloc((void **)&(d_data[i]), sizeof(float) * prob[i].l * max_index));
 		cutilSafeCall(cudaMalloc((void **)& temp, size_of_data ));
 
-		//printf(" danach: d_data[i] = %d  \n", temp);
 		cutilSafeCall(cudaMalloc((void **)&d_weights[i], sizeof(float) * prob[i].l));
 								 //todo: speicher wieder freigeben.
 		h_weights[i] = (float*) malloc(sizeof(float) * prob[i].l);
 		/*
 		 * @todo : hier mal ein test-todo
 		 */
-		//memset( (void**) h_data[i] , 0, sizeof(float) * prob[i].l * max_index); // 	 \todo : : int 0 == float 0?
-								 // 	 \todo : : int 0 == float 0?
 		memset( (void**) h_data_temp , 0, size_of_data);
 								 // 	 \todo : : int 0 == float 0?
 		memset( (void**) h_weights[i] , 10, sizeof(float) * prob[i].l);
@@ -129,24 +117,8 @@ extern "C" void run_cuda_kernel()
 		// copy host memory to device
 
 		cutilSafeCall(cudaMemcpy(temp,h_data_temp,size_of_data,cudaMemcpyHostToDevice));
-		//h_data[i] = h_data_temp;
 		d_data[i] = temp;
 	}
-
-	int j,k;
-	for(i=0;i<2;i++)
-		for(j=0;j<prob[i].l;j++)
-			for(k=0;k<max_index;k++)
-			{
-		//printf(" i = %d,  j = %d  k = %d  value = %f \n ", i, j, k, h_data[i][ max_index * j + k ]);
-			}
-
-	for(i=0;i<2;i++)
-		for(j=0;j<prob[i].l;j++)
-			for(k=0;k<max_index;k++)
-			{
-		//printf(" device:  i = %d,  j = %d  k = %d  value = %f ( index = %d )\n ", i, j, k, d_data[i][ max_index * j + k ], max_index * j + k );
-			}
 
 	float *d_dot_xi_x, *d_dot_yi_x;
 	float *d_dot_xi_y, *d_dot_yi_y;
@@ -233,7 +205,6 @@ extern "C" void run_cuda_kernel()
 				printf(" %d:%f \n", j, h_weights[i][j]);
 		}
 	}
-	//  for (n=0; n<nsize; n++) printf(" n,  x  =  %d  %f \n",n,h_x[n]);
 
 	// free memory
 
