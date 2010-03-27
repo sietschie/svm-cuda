@@ -1,3 +1,5 @@
+<<<<<<< local
+=======
 /** 
 * @file cuda_main.cu 
 * 
@@ -242,3 +244,4 @@ extern "C" void run_cuda_kernel()
   //}
 
 }
+>>>>>>> other

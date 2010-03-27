@@ -21,20 +21,14 @@ __device__ float* dot_yi_x;
 __device__ float* dot_xi_y;
 __device__ float* dot_yi_y;
 
-__device__ float* temp;
-
 __device__ float* get_element(int id, int set);
 
 __device__ float dot(float* px, float *py)
 {
-	//    print_vector(px);
-	//    print_vector(py);
 	float sum = 0.0;
 	int i;
 	for(i=0; i< maximum_index; i++)
-		//	while(px->index != -1 && py->index != -1)
 	{
-		//printf(" i = %d  px = %f  py = %f  sum = %f \n", i, px[i], py[i], sum);
 		sum += px[i] * py[i];
 	}
 	return sum;
@@ -62,7 +56,6 @@ __device__ float dot_d(float* px, float *py)
 	for(i=0; i< maximum_index; i++)
 	{
 		sum += px[i] * py[i];
-		temp[i] = sum;
 	}
 	return sum;
 }
@@ -83,19 +76,9 @@ __device__ float kernel_d(int set1, int element1, int set2, int element2)
 //float kernel_linear(int set1, int element1, int set2, int element2) //todo: als template implementieren
 __device__ float kernel(int set1, int element1, int set2, int element2)
 {
-	//	g_data[set1][ element1 * max_vector[set1] ]
-	//    float ret = dot(prob[set1].x[element1], prob[set2].x[element2]);
 	float* px = &(g_data[set1][ element1 * maximum_index ]);
 	float* py = &(g_data[set2][ element2 * maximum_index ]);
 
-	//int i;
-	//for(i=0; i< maximum_index; i++)
-	//printf("func kernel px: %f %f (index = %d)\n", px[i], g_data[set1][ element1 * maximum_index + i] ,  element1 * maximum_index + i);
-
-	//for(i=0; i< maximum_index; i++)
-	//printf("func kernel py: %f %f (index = %d)\n", py[i], g_data[set2][ element2 * maximum_index + i] ,  element2 * maximum_index + i);
-
-	//printf(" dot: %d %d - %d %d \n", set1, element1, set2, element2);
 	float ret = dot(px, py );
 	if(set1 == set2 && element1 == element2)
 		ret += C;
@@ -133,10 +116,6 @@ float kernel_sigmoid(int set1, int element1, int set2, int element2)
 	return ret;
 }
 */
-/*float kernel_precomputed(int set1, int element1, int set2, int element2)
-{
-	return x[i][(int)(x[j][0].value)].value;
-}*/
 
 __device__ int find_max(int p, float *dot_yi_x, float* dot_xi_x, float dot_xi_yi, float dot_xi_xi, float *max_p)
 {
@@ -144,36 +123,10 @@ __device__ int find_max(int p, float *dot_yi_x, float* dot_xi_x, float dot_xi_yi
 	int max_p_index = -1;
 	*max_p = -1000000000.0;		 //todo: HUGE_VAL fuer Cuda finden
 
-	//printf("start find max: \n");
 	int i;
 	for (i=0; i<data_size[p]; i++)
 	{
 		float sum = dot_yi_x[i] - dot_xi_x[i] - dot_xi_yi + dot_xi_xi;
-		//printf("sum:%f = dot_yi_x[%d]:%f - dot_xi_x[%d]:%f - dot_xi_yi:%f + dot_xi_xi:%f \n", sum, i, dot_yi_x[i], i,  dot_xi_x[i], dot_xi_yi, dot_xi_xi);
-		//temp[i] = sum;
-		if(sum > *max_p)
-		{
-			*max_p = sum;
-			max_p_index = i;
-		}
-	}
-	return max_p_index;
-}
-
-
-__device__ int find_max_d(int p, float *dot_yi_x, float* dot_xi_x, float dot_xi_yi, float dot_xi_xi, float *max_p)
-{
-	// find max
-	int max_p_index = -1;
-	*max_p = -1000000000.0;		 //todo: HUGE_VAL fuer Cuda finden
-
-	//printf("start find max: \n");
-	int i;
-	for (i=0; i<data_size[p]; i++)
-	{
-		float sum = dot_yi_x[i] - dot_xi_x[i] - dot_xi_yi + dot_xi_xi;
-		//printf("sum:%f = dot_yi_x[%d]:%f - dot_xi_x[%d]:%f - dot_xi_yi:%f + dot_xi_xi:%f \n", sum, i, dot_yi_x[i], i,  dot_xi_x[i], dot_xi_yi, dot_xi_xi);
-		temp[i] = sum;
 		if(sum > *max_p)
 		{
 			*max_p = sum;
@@ -186,14 +139,7 @@ __device__ int find_max_d(int p, float *dot_yi_x, float* dot_xi_x, float dot_xi_
 
 __device__ float compute_zaehler(float dot_xi_yi, float* dot_yi_x, float* dot_xi_x, int p, int max_p_index )
 {
-	/*g_temp[0] = dot_xi_yi;
-	g_temp[1] = dot_yi_x[max_p_index];
-	g_temp[2] = dot_xi_x[max_p_index];
-	g_temp[3] = kernel(p,max_p_index, p, max_p_index);
-	g_temp[4] = p;
-	g_temp[5] = max_p_index;
-	*/
-								 //todo: samevector, kann vorberechnet werden.
+	 //todo: samevector, kann vorberechnet werden.
 	float zaehler = dot_xi_yi - dot_yi_x[max_p_index] - dot_xi_x[max_p_index] + kernel(p,max_p_index, p, max_p_index);
 	return zaehler;
 }
@@ -238,41 +184,12 @@ __device__ float update_xi_yi(float dot_xi_yi, float* dot_yi_x, int max_p_index,
 
 __device__ void update_xi_x(float* dot_xi_x, int p, int p2, int max_p_index, float lambda, float* computed_kernels , int tid)
 {
-	//printf("update_xi_x(): %d %d %d \n", p, p2, max_p_index);
-
-	//printf("tid = %d \n", tid);
-
-	//int i;
-	//for (i=0; i<data_size[p2]; i++) {
-	//dot_xi_x[i]= dot_xi_x[i] * lambda + (1.0 - lambda) * kernel(p, max_p_index, p2, i);
-
 	if( (tid < data_size[0] && p2 == 0) || ( tid >= data_size[0] && p2 == 1 ) )
 	{
 		int offset = p2 * data_size[0];
 								 //(p, max_p_index, p2, i);
 		dot_xi_x[tid - offset]= dot_xi_x[tid - offset] * lambda + (1.0 - lambda) * computed_kernels[ tid  ];
-		//printf(" %d - %f, max_p_index = %d, offset = %d\n", i, computed_kernels[ offset + i  ], max_p_index, offset);
-
-		//temp[ tid - offset ] = dot_xi_x[tid - offset];
 	}
-	//printf("\n");
-}
-
-
-__device__ void update_xi_x_d(float* dot_xi_x, int p, int p2, int max_p_index, float lambda, float* computed_kernels , int tid)
-{
-
-	if( (tid < data_size[0] && p2 == 0) || ( tid >= data_size[0] && p2 == 1 ) )
-	{
-		int offset = p2 * data_size[0];
-
-								 //(p, max_p_index, p2, i);
-		dot_xi_x[tid - offset]= dot_xi_x[tid - offset] * lambda + (1.0 - lambda) * computed_kernels[ tid  ];
-
-		temp[ tid - offset ] = dot_xi_x[tid - offset];
-		//temp[0] = 333.3;
-	}
-	//temp[tid] = p2;
 }
 
 
@@ -445,14 +362,6 @@ int *g_look_up_table, int* g_reverse_look_up_table, int* g_circular_array, float
 	g_data[0] = g_data0;
 	g_data[1] = g_data1;
 
-	//int i,j,k;
-	//for(int i=0;i<2;i++)
-	//for(int j=0;j<prob[i].l;j++)
-	//for(int k=0;k<max_index;k++)
-	//{
-	//printf("on device:  i = %d,  j = %d  k = %d  value = %f ( index = %d )\n ", i, j, k, g_data[i][ max_index * j + k ], max_index * j + k );
-	//}
-
 	maximum_index = g_maximum_index;
 	data_size[0] = g_data0_size;
 	data_size[1] = g_data1_size;
@@ -461,6 +370,7 @@ int *g_look_up_table, int* g_reverse_look_up_table, int* g_circular_array, float
 	g_weights[1] = g_weights1;
 
 }
+
 
 __global__ void cuda_kernel_init_kernel()
 {
@@ -481,35 +391,18 @@ __global__ void cuda_kernel_init_kernel()
 
 		g_weights[t_set][t_element] = 0.0;
 
+		// initialisieren
 
-
-	// deklaration der variablen die werte zwischenspeichern
-	//float *dot_xi_x; // < x_i, x> \forall x \in P
-	//float *dot_yi_x;  // < y_i, x> \forall x \in P
-	//float dot_xi_yi; // <x_i, y_i >
-	//float dot_xi_xi; // <x_i, x_i >
-
-	//float *dot_yi_y; // < y_i, y> \forall y \in Q
-	//float *dot_xi_y;  // < x_i, y> \forall y \in Q
-	//float dot_yi_yi; // <y_i, y_i >
-
-	// speicher anfordern
-
-	// initialisieren
-
-	//dot_xi_x[0]=kernel_d(0, 0, 0, 0);
-
-	// diese stelle ist viel zu langsam:
-
-	if(t_set == 0) {
-		dot_xi_x[t_element]=kernel(0, 0, t_set, t_element);
-		dot_yi_x[t_element]=kernel(1, 0, t_set, t_element);
-	} else
-	{
-		dot_xi_y[t_element]=kernel(0, 0, t_set, t_element);
-		dot_yi_y[t_element]=kernel(1, 0, t_set, t_element);
+		if(t_set == 0)
+		{
+			dot_xi_x[t_element]=kernel(0, 0, t_set, t_element);
+			dot_yi_x[t_element]=kernel(1, 0, t_set, t_element);
+		} else
+		{
+			dot_xi_y[t_element]=kernel(0, 0, t_set, t_element);
+			dot_yi_y[t_element]=kernel(1, 0, t_set, t_element);
+		}
 	}
-}
 
 }
 
@@ -653,7 +546,7 @@ __global__ void cuda_kernel_distance()
 
 	//if (rdg_nenner <= 0)
 	//{
-		//printf("set huge value... ");
+	//printf("set huge value... ");
 	//	rdg = 100000000000.0;	 // todo: HUGE_VAL;
 	//}
 	//else
