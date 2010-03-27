@@ -112,10 +112,178 @@ __device__ int find_max(int p, float *dot_yi_x, float* dot_xi_x, float dot_xi_yi
 	return max_p_index;
 }
 
+/*
+template <unsigned int blockSize>
+__global__ void reduce6(int *g_data_index, float *g_data_value, unsigned int set, int first) //todo: set und first als template parameter
+{
+	//extern __shared__ int sdata[];
+	__shared__ int sdata_index[blockSize];
+	__shared__ float sdata_value[blockSize];
+	unsigned int tid = threadIdx.x;
+	unsigned int i = blockIdx.x*(blockSize*2) + tid;
+	//unsigned int gridSize = blockSize*gridDim.x;
+
+	if(first == 1){
+	float value1;
+	if(set == 0)
+		value1 = dot_yi_x[i] - dot_xi_x[i] - dot_xi_yi + dot_xi_xi;
+	else
+		value1 = dot_xi_y[i] - dot_yi_y[i] - dot_xi_yi + dot_yi_yi;
+
+	if( i + blockSize < data_size[set])
+	{
+	
+		float value2;
+		if(set == 0)
+			value2 = dot_yi_x[i+blockSize] - dot_xi_x[i+blockSize] - dot_xi_yi + dot_xi_xi;
+		else
+			value2 = dot_xi_y[i+blockSize] - dot_yi_y[i+blockSize] - dot_xi_yi + dot_yi_yi;
+
+		if(value1 > value2)
+		{
+			sdata_value[tid] = value1;
+			sdata_index[tid] = i;
+		}
+		else
+		{
+			sdata_value[tid] = value2;
+			sdata_index[tid] = i+blockSize;
+		}
+	} else
+	{
+		sdata_value[tid] = value1;
+		sdata_index[tid] = i;
+	}
+	} else
+	{
+		float value1 = g_data_value[i];
+		float value2 = g_data_value[i+blockSize];
+		if(value1>value2){
+			sdata_value[tid] = value1;
+			sdata_index[tid] = i;
+		} else {
+			sdata_value[tid] = value2;
+			sdata_index[tid] = i+blockSize;
+		}
+	}
+
+	__syncthreads();
+	if (blockSize >= 512)
+	{
+		if (tid < 256)
+		{
+			if(sdata_value[tid] < sdata_value[tid + 256])
+			{
+				sdata_value[tid] = sdata_value[tid + 256];
+				sdata_index[tid] = sdata_index[tid + 256];
+			}
+		}
+		__syncthreads();
+	}
+	if (blockSize >= 256)
+	{
+		if (tid < 128)
+		{
+			if(sdata_value[tid] < sdata_value[tid + 128])
+			{
+				sdata_value[tid] = sdata_value[tid + 128];
+				sdata_index[tid] = sdata_index[tid + 128];
+			}
+		}
+		__syncthreads();
+	}
+	if (blockSize >= 128)
+	{
+		if (tid < 64)
+		{
+			if(sdata_value[tid] < sdata_value[tid + 64])
+			{
+				sdata_value[tid] = sdata_value[tid + 64];
+				sdata_index[tid] = sdata_index[tid + 64];
+			}
+		}
+		__syncthreads();
+	}
+
+	if (tid < 32)
+	{
+		if (blockSize >= 64)
+		{
+			if(sdata_value[tid] < sdata_value[tid + 32])
+			{
+				sdata_value[tid] = sdata_value[tid + 32];
+				sdata_index[tid] = sdata_index[tid + 32];
+			}
+
+		}
+		if (blockSize >= 32)
+		{
+			if(sdata_value[tid] < sdata_value[tid + 16])
+			{
+				sdata_value[tid] = sdata_value[tid + 16];
+				sdata_index[tid] = sdata_index[tid + 16];
+			}
+
+		}
+		if (blockSize >= 16)
+		{
+			if(sdata_value[tid] < sdata_value[tid + 8])
+			{
+				sdata_value[tid] = sdata_value[tid + 8];
+				sdata_index[tid] = sdata_index[tid + 8];
+			}
+
+		}
+		if (blockSize >= 8)
+		{
+			if(sdata_value[tid] < sdata_value[tid + 4])
+			{
+				sdata_value[tid] = sdata_value[tid + 4];
+				sdata_index[tid] = sdata_index[tid + 4];
+			}
+
+		}
+		if (blockSize >= 4)
+		{
+			if(sdata_value[tid] < sdata_value[tid + 2])
+			{
+				sdata_value[tid] = sdata_value[tid + 2];
+				sdata_index[tid] = sdata_index[tid + 2];
+			}
+
+		}
+		if (blockSize >= 2)
+		{
+			if(sdata_value[tid] < sdata_value[tid + 1])
+			{
+				sdata_value[tid] = sdata_value[tid + 1];
+				sdata_index[tid] = sdata_index[tid + 1];
+			}
+
+		}
+	}
+	if (tid == 0) 
+	{
+		g_data_index[blockIdx.x] = sdata_index[0];
+		g_data_value[blockIdx.x] = sdata_value[0];
+		if(blockIdx.x==0)
+		{
+			if(set == 0)
+			{
+				max_p = sdata_value[0];
+				max_p_index = sdata_index[0];
+			} else {
+				max_q = sdata_value[0];
+				max_q_index = sdata_index[0];
+			}
+		}
+	}
+}
+*/
 
 __device__ float compute_zaehler(float dot_xi_yi, float* dot_yi_x, float* dot_xi_x, int p, int max_p_index )
 {
-	 //todo: samevector, kann vorberechnet werden.
+	//todo: samevector, kann vorberechnet werden.
 	float zaehler = dot_xi_yi - dot_yi_x[max_p_index] - dot_xi_x[max_p_index] + kernel(p,max_p_index, p, max_p_index);
 	return zaehler;
 }

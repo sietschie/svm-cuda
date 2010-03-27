@@ -58,6 +58,34 @@ inline void __cudaSafeCall( cudaError err, const char *file, const int line )
 	}
 }
 
+/*
+void runFindMax(int dimGrid, int dimBlock, int* d_reduction_index, float* d_reduction_value, int set, int first)
+{
+	switch (dimBlock)
+	{
+     case 512:
+        reduce6<512><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first); break;
+     case 256:
+        reduce6<256><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first); break;
+     case 128:
+        reduce6<128><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first); break;
+     case 64:
+        reduce6< 64><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first); break;
+     case 32:
+        reduce6< 32><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first); break;
+     case 16:
+        reduce6< 16><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first); break;
+     case 8:
+        reduce6< 8><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first); break;
+     case 4:
+        reduce6< 4><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first); break;
+     case 2:
+        reduce6< 2><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first); break;
+     case 1:
+        reduce6< 1><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first); break;
+     }
+
+}*/
 
 /**
  * @brief Eine kurze Beschreibung der Funktion
@@ -130,6 +158,26 @@ extern "C" void run_cuda_kernel()
 								 // 	 \todo : : prob.l durch was schoeners  ersetzen?
 	cutilSafeCall(cudaMalloc((void**) &d_dot_yi_y, prob[1].l * sizeof(float)));
 
+	// find max power of 2 that is smaller than prob.l
+	int reduction_length[2];
+	float *d_reduction_value[2];
+	int *d_reduction_index[2];
+	int reduction_nthreads;
+	reduction_nthreads = 128;
+
+	for(i=0;i<2;i++){
+		reduction_length[i] = 1;
+		while(reduction_length[i] * 2 * reduction_nthreads < prob[i].l) {
+			reduction_length[i] *= 2;
+		}
+
+		cutilSafeCall(cudaMalloc((void**) &d_reduction_value[i], reduction_length[i] * sizeof(float)));
+		cutilSafeCall(cudaMalloc((void**) &d_reduction_index[i], reduction_length[i] * sizeof(int)));
+	}
+
+
+	printf(" %d < %d and %d < %d \n", reduction_length[0], prob[0].l, reduction_length[1], prob[1].l);
+
 	//cache parameters
 	nr_of_cache_entries = 4;
 	nr_of_elements = prob[0].l + prob[1].l;
@@ -170,7 +218,7 @@ extern "C" void run_cuda_kernel()
 	cudaThreadSynchronize();
 	// check if kernel execution generated and error
 	cutilCheckMsg("Kernel execution failed");
-	for(int i = 0; i<100; i++)
+	for(int i = 0; i<10; i++)
 	{
 		cuda_kernel_lambda<<<1, 1>>>();
 		cudaThreadSynchronize();
@@ -182,7 +230,11 @@ extern "C" void run_cuda_kernel()
 		// check if kernel execution generated and error
 		cutilCheckMsg("Kernel execution failed");
 		cuda_kernel_distance<<<1, 1>>>();
-		cudaThreadSynchronize();
+		//runFindMax(reduction_length[0], reduction_nthreads, d_reduction_index[0], d_reduction_value[0], 0, 1);
+		//runFindMax(reduction_length[1], reduction_nthreads, d_reduction_index[1], d_reduction_value[1], 1, 1);
+		//cudaThreadSynchronize();
+		//runFindMax(1, reduction_length[0] / 2, d_reduction_index[0], d_reduction_value[0], 0, 0);
+		//runFindMax(1, reduction_length[1] / 2, d_reduction_index[1], d_reduction_value[1], 1, 0);
 		// check if kernel execution generated and error
 		cutilCheckMsg("Kernel execution failed");
 	}

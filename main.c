@@ -9,7 +9,7 @@ main()
 {
 	printf("svm on cuda started!\n");
 
-	read_problem("data/a2a.t");
+	read_problem("data/heart_scale");
 
 	printf("vector dimension: %d \n", max_index);
 
