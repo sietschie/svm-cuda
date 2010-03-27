@@ -11,8 +11,6 @@ main()
 
 	read_problem("data/heart_scale4");
 
-	printf(" %d \n", prob[0].l);
-
 	printf("vector dimension: %d \n", max_index);
 
 	run_cuda_kernel();
