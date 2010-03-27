@@ -49,30 +49,6 @@ inline float powi(float base, int times)
 }
 
 
-__device__ float dot_d(float* px, float *py)
-{
-	float sum = 0.0;
-	int i;
-	for(i=0; i< maximum_index; i++)
-	{
-		sum += px[i] * py[i];
-	}
-	return sum;
-}
-
-
-__device__ float kernel_d(int set1, int element1, int set2, int element2)
-{
-	float* px = &(g_data[set1][ element1 * maximum_index ]);
-	float* py = &(g_data[set2][ element2 * maximum_index ]);
-
-	float ret = dot_d(px, py );
-	if(set1 == set2 && element1 == element2)
-		ret += C;
-	return ret;
-}
-
-
 //float kernel_linear(int set1, int element1, int set2, int element2) //todo: als template implementieren
 __device__ float kernel(int set1, int element1, int set2, int element2)
 {
