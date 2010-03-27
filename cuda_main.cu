@@ -80,7 +80,7 @@ extern "C" void run_cuda_kernel()
   // allocate memory for array
 
 
-	float* h_data[2];
+	//float* h_data[2];
 	float* d_data[2];
 	float* d_weights[2];
 	float* h_weights[2];
@@ -101,7 +101,7 @@ extern "C" void run_cuda_kernel()
 
 		//printf(" danach: d_data[i] = %d  \n", temp);
 		cutilSafeCall(cudaMalloc((void **)&d_weights[i], sizeof(float) * prob[i].l));
-		h_weights[i] = (float*) malloc(sizeof(float) * prob[i].l);
+		h_weights[i] = (float*) malloc(sizeof(float) * prob[i].l); //todo: speicher wieder freigeben.
 /*
 * @todo : hier mal ein test-todo
 */																			
@@ -122,7 +122,7 @@ extern "C" void run_cuda_kernel()
 		// copy host memory to device
 
 		cutilSafeCall(cudaMemcpy(temp,h_data_temp,size_of_data,cudaMemcpyHostToDevice));
-		h_data[i] = h_data_temp;
+		//h_data[i] = h_data_temp;
 		d_data[i] = temp;
 	}
 
@@ -193,7 +193,7 @@ extern "C" void run_cuda_kernel()
 	cudaThreadSynchronize();
    // check if kernel execution generated and error
     cutilCheckMsg("Kernel execution failed");
-/*	for(int i = 0; i<0; i++){
+	for(int i = 0; i<10; i++){
 		cuda_kernel_lambda<<<1, 1>>>();
 		cudaThreadSynchronize();
    		// check if kernel execution generated and error
@@ -209,7 +209,7 @@ extern "C" void run_cuda_kernel()
     	// check if kernel execution generated and error
     	cutilCheckMsg("Kernel execution failed");
 	}
-*/
+
 
   // copy back results and print them 
 

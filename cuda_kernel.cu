@@ -24,6 +24,7 @@ __device__ float* dot_yi_y;
 __device__ float* temp;
 
 __device__ float* get_element(int id, int set);
+
 __device__ float dot(float* px, float *py)
 {
 	//    print_vector(px);
@@ -595,14 +596,7 @@ __global__ void cuda_kernel_computekernels()
 
 		if (max_p >= max_q)
 		{
-			if(tid < data_size[0])
-			{
-				data[tid] = kernel(0, max_p_index, 0, tid);
-			}
-			else
-			{
-				data[tid] = kernel(0, max_p_index, 1, tid - data_size[0]);
-			}
+			data[tid] = kernel(0, max_p_index, t_set, t_element);
 
 								 //todo: cache einbauen
 			float* computed_kernels = data;
@@ -641,7 +635,9 @@ __global__ void cuda_kernel_distance()
 	//duality gap
 	// absolute duality gap
 
-	float adg = max_p + max_q;
+	//todo: rueckgabewert an host zurueckgeben
+
+	//float adg = max_p + max_q;
 
 	//printf("max_p = %f  max_q = %f ", max_p, max_q);
 	//printf("adg = %f ", adg);
@@ -650,20 +646,20 @@ __global__ void cuda_kernel_distance()
 	// adg / ||p-q||^2 - adg
 	// adg / <p-q, p-q> - adg
 
-	float distance = dot_xi_xi + dot_yi_yi - 2 * dot_xi_yi;
+	//float distance = dot_xi_xi + dot_yi_yi - 2 * dot_xi_yi;
 
-	float rdg_nenner = distance - adg;
-	float rdg;
+	//float rdg_nenner = distance - adg;
+	//float rdg;
 
-	if (rdg_nenner <= 0)
-	{
+	//if (rdg_nenner <= 0)
+	//{
 		//printf("set huge value... ");
-		rdg = 100000000000.0;	 // todo: HUGE_VAL;
-	}
-	else
-	{
-		rdg = adg / rdg_nenner;
-	}
+	//	rdg = 100000000000.0;	 // todo: HUGE_VAL;
+	//}
+	//else
+	//{
+	//	rdg = adg / rdg_nenner;
+	//}
 
 	//printf("<x-y,x-y> = %e " , distance);
 	//printf("adg = %e " , adg);
@@ -672,7 +668,7 @@ __global__ void cuda_kernel_distance()
 	//print_weights(y_weights, prob[1]);
 
 	//rho = - dot_xi_yi + dot_xi_xi - (dot_xi_xi + dot_yi_yi - 2 * dot_xi_yi)/2;
-	float rho = dot_xi_yi - dot_xi_xi - (dot_xi_xi + dot_yi_yi - 2 * dot_xi_yi)/2;
+	//float rho = dot_xi_yi - dot_xi_xi - (dot_xi_xi + dot_yi_yi - 2 * dot_xi_yi)/2;
 	//printf("xi_xi = %f   yi_yi = %f   xi_yi = %f \n", dot_xi_xi, dot_yi_yi, dot_xi_yi);
 
 }
