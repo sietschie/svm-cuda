@@ -114,61 +114,66 @@ __device__ int find_max(int p, float *dot_yi_x, float* dot_xi_x, float dot_xi_yi
 
 
 template <unsigned int blockSize>
-__global__ void reduce6(int *g_data_index, float *g_data_value, unsigned int set, int first, int data_size1) //todo: set und first als template parameter?
+								 //todo: set und first als template parameter?
+__global__ void reduce6(int *g_data_index, float *g_data_value, unsigned int set, int first, int data_size1)
 {
 	__shared__ int sdata_index[blockSize];
 	__shared__ float sdata_value[blockSize];
 	unsigned int tid = threadIdx.x;
 	unsigned int i = blockIdx.x*(blockSize*2) + tid;
 
-	if(first == 1){
-	float value1;
-	if(set == 0)
-		value1 = dot_yi_x[i] - dot_xi_x[i] - dot_xi_yi + dot_xi_xi;
-	else
-		value1 = dot_xi_y[i] - dot_yi_y[i] - dot_xi_yi + dot_yi_yi;
-
-	if( i + blockSize < data_size[set])
+	if(first == 1)
 	{
-	
-		float value2;
+		float value1;
 		if(set == 0)
-			value2 = dot_yi_x[i+blockSize] - dot_xi_x[i+blockSize] - dot_xi_yi + dot_xi_xi;
+			value1 = dot_yi_x[i] - dot_xi_x[i] - dot_xi_yi + dot_xi_xi;
 		else
-			value2 = dot_xi_y[i+blockSize] - dot_yi_y[i+blockSize] - dot_xi_yi + dot_yi_yi;
+			value1 = dot_xi_y[i] - dot_yi_y[i] - dot_xi_yi + dot_yi_yi;
 
-		if(value1 > value2)
+		if( i + blockSize < data_size[set])
+		{
+
+			float value2;
+			if(set == 0)
+				value2 = dot_yi_x[i+blockSize] - dot_xi_x[i+blockSize] - dot_xi_yi + dot_xi_xi;
+			else
+				value2 = dot_xi_y[i+blockSize] - dot_yi_y[i+blockSize] - dot_xi_yi + dot_yi_yi;
+
+			if(value1 > value2)
+			{
+				sdata_value[tid] = value1;
+				sdata_index[tid] = i;
+			}
+			else
+			{
+				sdata_value[tid] = value2;
+				sdata_index[tid] = i+blockSize;
+			}
+		} else
 		{
 			sdata_value[tid] = value1;
 			sdata_index[tid] = i;
 		}
-		else
-		{
-			sdata_value[tid] = value2;
-			sdata_index[tid] = i+blockSize;
-		}
-	} else
-	{
-		sdata_value[tid] = value1;
-		sdata_index[tid] = i;
-	}
 	} else
 	{
 		if( i + blockSize < data_size1)
 		{
-		float value1 = g_data_value[i];
-		float value2 = g_data_value[i+blockSize];
-		if(value1>value2){
-			sdata_value[tid] = value1;
-			sdata_index[tid] = g_data_index[i];
-		} else {
-			sdata_value[tid] = value2;
-			sdata_index[tid] = g_data_index[i+blockSize];
-		}
+			float value1 = g_data_value[i];
+			float value2 = g_data_value[i+blockSize];
+			if(value1>value2)
+			{
+				sdata_value[tid] = value1;
+				sdata_index[tid] = g_data_index[i];
+			}
+			else
+			{
+				sdata_value[tid] = value2;
+				sdata_index[tid] = g_data_index[i+blockSize];
+			}
 		} else
 		{
-				sdata_value[tid] = g_data_value[i];
-				sdata_index[tid] = g_data_index[i];
+			sdata_value[tid] = g_data_value[i];
+			sdata_index[tid] = g_data_index[i];
 		}
 	}
 
@@ -267,7 +272,7 @@ __global__ void reduce6(int *g_data_index, float *g_data_value, unsigned int set
 
 		}
 	}
-	if (tid == 0) 
+	if (tid == 0)
 	{
 		g_data_index[blockIdx.x] = sdata_index[0];
 		g_data_value[blockIdx.x] = sdata_value[0];
@@ -277,13 +282,16 @@ __global__ void reduce6(int *g_data_index, float *g_data_value, unsigned int set
 			{
 				max_p = sdata_value[0];
 				max_p_index = sdata_index[0];
-			} else {
+			}
+			else
+			{
 				max_q = sdata_value[0];
 				max_q_index = sdata_index[0];
 			}
 		}
 	}
 }
+
 
 __device__ float compute_zaehler(float dot_xi_yi, float* dot_yi_x, float* dot_xi_x, int p, int max_p_index )
 {
