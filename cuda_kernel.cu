@@ -112,16 +112,14 @@ __device__ int find_max(int p, float *dot_yi_x, float* dot_xi_x, float dot_xi_yi
 	return max_p_index;
 }
 
-/*
+
 template <unsigned int blockSize>
-__global__ void reduce6(int *g_data_index, float *g_data_value, unsigned int set, int first) //todo: set und first als template parameter
+__global__ void reduce6(int *g_data_index, float *g_data_value, unsigned int set, int first, int data_size1) //todo: set und first als template parameter?
 {
-	//extern __shared__ int sdata[];
 	__shared__ int sdata_index[blockSize];
 	__shared__ float sdata_value[blockSize];
 	unsigned int tid = threadIdx.x;
 	unsigned int i = blockIdx.x*(blockSize*2) + tid;
-	//unsigned int gridSize = blockSize*gridDim.x;
 
 	if(first == 1){
 	float value1;
@@ -156,14 +154,21 @@ __global__ void reduce6(int *g_data_index, float *g_data_value, unsigned int set
 	}
 	} else
 	{
+		if( i + blockSize < data_size1)
+		{
 		float value1 = g_data_value[i];
 		float value2 = g_data_value[i+blockSize];
 		if(value1>value2){
 			sdata_value[tid] = value1;
-			sdata_index[tid] = i;
+			sdata_index[tid] = g_data_index[i];
 		} else {
 			sdata_value[tid] = value2;
-			sdata_index[tid] = i+blockSize;
+			sdata_index[tid] = g_data_index[i+blockSize];
+		}
+		} else
+		{
+				sdata_value[tid] = g_data_value[i];
+				sdata_index[tid] = g_data_index[i];
 		}
 	}
 
@@ -279,7 +284,6 @@ __global__ void reduce6(int *g_data_index, float *g_data_value, unsigned int set
 		}
 	}
 }
-*/
 
 __device__ float compute_zaehler(float dot_xi_yi, float* dot_yi_x, float* dot_xi_x, int p, int max_p_index )
 {

@@ -58,34 +58,34 @@ inline void __cudaSafeCall( cudaError err, const char *file, const int line )
 	}
 }
 
-/*
-void runFindMax(int dimGrid, int dimBlock, int* d_reduction_index, float* d_reduction_value, int set, int first)
+
+void runFindMax(int dimGrid, int dimBlock, int* d_reduction_index, float* d_reduction_value, int set, int first, int data_size1)
 {
 	switch (dimBlock)
 	{
      case 512:
-        reduce6<512><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first); break;
+        reduce6<512><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first, data_size1); break;
      case 256:
-        reduce6<256><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first); break;
+        reduce6<256><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first, data_size1); break;
      case 128:
-        reduce6<128><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first); break;
+        reduce6<128><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first, data_size1); break;
      case 64:
-        reduce6< 64><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first); break;
+        reduce6< 64><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first, data_size1); break;
      case 32:
-        reduce6< 32><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first); break;
+        reduce6< 32><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first, data_size1); break;
      case 16:
-        reduce6< 16><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first); break;
+        reduce6< 16><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first, data_size1); break;
      case 8:
-        reduce6< 8><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first); break;
+        reduce6< 8><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first, data_size1); break;
      case 4:
-        reduce6< 4><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first); break;
+        reduce6< 4><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first, data_size1); break;
      case 2:
-        reduce6< 2><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first); break;
+        reduce6< 2><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first, data_size1); break;
      case 1:
-        reduce6< 1><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first); break;
+        reduce6< 1><<< dimGrid, dimBlock >>>(d_reduction_index, d_reduction_value, set, first, data_size1); break;
      }
 
-}*/
+}
 
 /**
  * @brief Eine kurze Beschreibung der Funktion
@@ -162,21 +162,26 @@ extern "C" void run_cuda_kernel()
 	int reduction_length[2];
 	float *d_reduction_value[2];
 	int *d_reduction_index[2];
-	int reduction_nthreads;
-	reduction_nthreads = 128;
+	int reduction_nthreads[2];
+	reduction_nthreads[0] = 256;
+	reduction_nthreads[1] = 256; //todo: reduce.pdf sagt am besten 128
 
 	for(i=0;i<2;i++){
-		reduction_length[i] = 1;
-		while(reduction_length[i] * 2 * reduction_nthreads < prob[i].l) {
-			reduction_length[i] *= 2;
+		reduction_length[i] = (( prob[i].l - 1) / (2 * reduction_nthreads[i])) + 1;
+
+		while(reduction_nthreads[i] > prob[i].l)
+		{
+			reduction_nthreads[i] /= 2;
 		}
+
+		//reduction_length[i] = 128; //test
 
 		cutilSafeCall(cudaMalloc((void**) &d_reduction_value[i], reduction_length[i] * sizeof(float)));
 		cutilSafeCall(cudaMalloc((void**) &d_reduction_index[i], reduction_length[i] * sizeof(int)));
 	}
 
 
-	printf(" %d < %d and %d < %d \n", reduction_length[0], prob[0].l, reduction_length[1], prob[1].l);
+	printf(" rl: %d, thr: %d prob: %d and rl: %d thr: %d prob: %d \n", reduction_length[0], reduction_nthreads[0], prob[0].l, reduction_length[1], reduction_nthreads[1], prob[1].l);
 
 	//cache parameters
 	nr_of_cache_entries = 4;
@@ -218,7 +223,7 @@ extern "C" void run_cuda_kernel()
 	cudaThreadSynchronize();
 	// check if kernel execution generated and error
 	cutilCheckMsg("Kernel execution failed");
-	for(int i = 0; i<10; i++)
+	for(int i = 0; i<9; i++)
 	{
 		cuda_kernel_lambda<<<1, 1>>>();
 		cudaThreadSynchronize();
@@ -229,12 +234,118 @@ extern "C" void run_cuda_kernel()
 		cudaThreadSynchronize();
 		// check if kernel execution generated and error
 		cutilCheckMsg("Kernel execution failed");
-		cuda_kernel_distance<<<1, 1>>>();
-		//runFindMax(reduction_length[0], reduction_nthreads, d_reduction_index[0], d_reduction_value[0], 0, 1);
-		//runFindMax(reduction_length[1], reduction_nthreads, d_reduction_index[1], d_reduction_value[1], 1, 1);
-		//cudaThreadSynchronize();
+//		cuda_kernel_distance<<<1, 1>>>();
+
+		float *d_temp1;
+		cutilSafeCall(cudaMalloc((void**) &d_temp1, 1024 * sizeof(float)));
+
+		int *d_temp2;
+		cutilSafeCall(cudaMalloc((void**) &d_temp2, 1024 * sizeof(int)));
+
+		runFindMax(reduction_length[0], reduction_nthreads[0], d_reduction_index[0], d_reduction_value[0], 0, 1,0);
+		runFindMax(reduction_length[1], reduction_nthreads[1], d_reduction_index[1], d_reduction_value[1], 1, 1,0);
+
+
+		//reduce6<256><<<reduction_length[1], reduction_nthreads[1]>>>(d_reduction_index[1], d_reduction_value[1], 1, 1, 0);
+		cudaThreadSynchronize();
+
+		int tempSize = 512;
+		float h_temp1[tempSize];
+		cutilSafeCall(cudaMemcpy( &h_temp1, d_temp1, sizeof(float) * tempSize, cudaMemcpyDeviceToHost));
+		int h_temp2[tempSize];
+		cutilSafeCall(cudaMemcpy( &h_temp2, d_temp2, sizeof(int) * tempSize, cudaMemcpyDeviceToHost));
+
+		int l;
+		for(l=0;l<3;l++)
+		{
+			//printf("%d - %f (%d)\n", l, h_temp1[l], h_temp2[l]);
+		}
+
+
+		//reduce6<2><<<1, 2>>>(d_reduction_index[1], d_reduction_value[1], 1, 0, 3);
+//		runFindMax(1, 2, d_reduction_index[1], d_reduction_value[1], 1, 0);
+
+		float values[4];
+		int indizes[4];
+		
+		cutilSafeCall(cudaMemcpy( &values, d_reduction_value[1], sizeof(float) * 4, cudaMemcpyDeviceToHost));
+		cutilSafeCall(cudaMemcpy( &indizes, d_reduction_index[1], sizeof(int) * 4, cudaMemcpyDeviceToHost));
+		
+		int k;
+		for(k=0;k<1;k++)
+		{
+			//printf(" %d: %f (%d) \n", k, values[k], indizes[k]);
+		}
+
+		int temp_reduction_length[2];
+		int temp_reduction_nthreads[2];
+
+		for(k=0;k<2;k++) //todo: diesen hack entfernen
+		{
+			temp_reduction_length[k] = reduction_length[k];
+			temp_reduction_nthreads[k] = reduction_nthreads[k];
+		}
+
+		int counter = 0;
+		while( (reduction_length[0] != 1) |  (reduction_length[1] != 1) )
+		{
+			counter++;
+			int j;
+			for(j=0;j<2;j++)
+			{
+			  if(reduction_length[j] != 1) {
+				int data_size = reduction_length[j];
+				
+				reduction_nthreads[j] = 256;
+				reduction_length[j] = (( data_size - 1) / (2 * reduction_nthreads[j])) + 1;
+
+				while(reduction_nthreads[j] > data_size)
+				{
+					reduction_nthreads[j] /= 2;
+				}
+
+				runFindMax(reduction_length[j], reduction_nthreads[j], d_reduction_index[j], d_reduction_value[j], j, 0, data_size);
+				//printf(" search max, iteration %d, teil %d,  %d-%d \n", counter, j, reduction_length[j], reduction_nthreads[j]);
+			  }
+			}
+		cudaThreadSynchronize();
+		}
+
+		for(k=0;k<2;k++)
+		{
+			reduction_length[k] = temp_reduction_length[k];
+			reduction_nthreads[k] = temp_reduction_nthreads[k];
+		}
+
+		
+/*		float reduction[2];
+		int reduction_idx[2];
+		cutilSafeCall(cudaMemcpy( &reduction, d_reduction_value[0], sizeof(float) * 1, cudaMemcpyDeviceToHost));
+		cutilSafeCall(cudaMemcpy( &reduction_idx, d_reduction_index[0], sizeof(int), cudaMemcpyDeviceToHost));
+		int j;
+		for(j=0;j<1;j++)
+			printf(" %d : %f - %d \n", j, reduction[j], reduction_idx[j]);
+*/
+		float max1[1];
+		float max2[1];	
+		int max1_idx[1];
+		int max2_idx[1];	
+		cutilSafeCall(cudaMemcpy( &max1, d_reduction_value[0], sizeof(float), cudaMemcpyDeviceToHost));
+		cutilSafeCall(cudaMemcpy( &max2, d_reduction_value[1], sizeof(float), cudaMemcpyDeviceToHost));
+		cutilSafeCall(cudaMemcpy( &max1_idx, d_reduction_index[0], sizeof(int), cudaMemcpyDeviceToHost));
+		cutilSafeCall(cudaMemcpy( &max2_idx, d_reduction_index[1], sizeof(int), cudaMemcpyDeviceToHost));
+	
+		printf("max[0] = %d (%f)   max[1] = %d (%f)  \n", max1_idx[0], max1[0], max2_idx[0], max2[0]);
+
+		//printf("aufruf zweite runde\n");
+
 		//runFindMax(1, reduction_length[0] / 2, d_reduction_index[0], d_reduction_value[0], 0, 0);
 		//runFindMax(1, reduction_length[1] / 2, d_reduction_index[1], d_reduction_value[1], 1, 0);
+
+		cudaThreadSynchronize();
+
+		//printf("d_reduction_index[0][0] = %d \n", d_reduction_index[0][0]);
+		//printf("d_reduction_index[1][0] = %d \n", d_reduction_index[1][0]);
 		// check if kernel execution generated and error
 		cutilCheckMsg("Kernel execution failed");
 	}
