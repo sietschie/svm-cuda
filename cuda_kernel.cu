@@ -130,29 +130,35 @@ __global__ void reduce6(int *g_data_index, float *g_data_value, unsigned int set
 		else
 			value1 = dot_xi_y[i] - dot_yi_y[i] - dot_xi_yi + dot_yi_yi;
 
-		if( i + blockSize < data_size[set])
+		if(i < data_size[set])
 		{
-
-			float value2;
-			if(set == 0)
-				value2 = dot_yi_x[i+blockSize] - dot_xi_x[i+blockSize] - dot_xi_yi + dot_xi_xi;
-			else
-				value2 = dot_xi_y[i+blockSize] - dot_yi_y[i+blockSize] - dot_xi_yi + dot_yi_yi;
-
-			if(value1 > value2)
+			if( i + blockSize < data_size[set])
+			{
+	
+				float value2;
+				if(set == 0)
+					value2 = dot_yi_x[i+blockSize] - dot_xi_x[i+blockSize] - dot_xi_yi + dot_xi_xi;
+				else
+					value2 = dot_xi_y[i+blockSize] - dot_yi_y[i+blockSize] - dot_xi_yi + dot_yi_yi;
+	
+				if(value1 > value2)
+				{
+					sdata_value[tid] = value1;
+					sdata_index[tid] = i;
+				}
+				else
+				{
+					sdata_value[tid] = value2;
+					sdata_index[tid] = i+blockSize;
+				}
+			} else
 			{
 				sdata_value[tid] = value1;
 				sdata_index[tid] = i;
 			}
-			else
-			{
-				sdata_value[tid] = value2;
-				sdata_index[tid] = i+blockSize;
-			}
-		} else
-		{
-			sdata_value[tid] = value1;
-			sdata_index[tid] = i;
+		} else {
+			sdata_value[tid] = -100000000000.0; //todo: max_val suchen
+			sdata_index[tid] = -1;
 		}
 	} else
 	{
