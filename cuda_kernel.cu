@@ -579,6 +579,35 @@ __global__ void cuda_kernel_init_findmax()
 
 }
 
+__global__ void cuda_kernel_updateWeights()
+{
+	int tid = threadIdx.x + blockDim.x*blockIdx.x;
+	if (max_p >= max_q)
+	{
+		if(tid < data_size[0])
+		{
+			g_weights[0][tid] *= lambda;
+
+		}
+		if(tid == 0)
+		{
+			g_weights[0][max_p_index] += 1.0 - lambda;
+		}
+	} else {
+		if(tid < data_size[1])
+		{
+			g_weights[1][tid] *= lambda;
+
+		}
+		if(tid == 0)
+		{
+			g_weights[1][max_q_index] += 1.0 - lambda;
+		}
+
+		//if(tid == 1691)
+		//	g_weights[1][1691] = 1234.56;
+	}
+}
 
 __global__ void cuda_kernel_lambda()
 {
@@ -593,7 +622,7 @@ __global__ void cuda_kernel_lambda()
 		if(lambda < 0.0)    lambda = 0.0;
 		if(lambda > 1.0)    lambda = 0.0;
 
-		add_to_weights(g_weights[0], lambda, max_p_index, 0);
+		//add_to_weights(g_weights[0], lambda, max_p_index, 0);
 
 		// update dotproducts
 
@@ -614,7 +643,7 @@ __global__ void cuda_kernel_lambda()
 
 		//g_temp[0] = lambda;
 
-		add_to_weights(g_weights[1], lambda, max_q_index, 1);
+		//add_to_weights(g_weights[1], lambda, max_q_index, 1);
 
 		// update dotproducts
 
