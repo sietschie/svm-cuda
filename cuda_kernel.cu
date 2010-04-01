@@ -20,6 +20,7 @@ __device__ float* dot_xi_x;
 __device__ float* dot_yi_x;
 __device__ float* dot_xi_y;
 __device__ float* dot_yi_y;
+__device__ float* dot_same[2];
 
 __device__ float* get_element(int id, int set);
 
@@ -302,14 +303,14 @@ __global__ void reduce6(int *g_data_index, float *g_data_value, unsigned int set
 __device__ float compute_zaehler(float dot_xi_yi, float* dot_yi_x, float* dot_xi_x, int p, int max_p_index )
 {
 	//todo: samevector, kann vorberechnet werden.
-	float zaehler = dot_xi_yi - dot_yi_x[max_p_index] - dot_xi_x[max_p_index] + kernel(p,max_p_index, p, max_p_index);
+	float zaehler = dot_xi_yi - dot_yi_x[max_p_index] - dot_xi_x[max_p_index] + dot_same[p][max_p_index];//kernel(p,max_p_index, p, max_p_index);
 	return zaehler;
 }
 
 
 __device__ float compute_nenner(float dot_xi_xi, float* dot_xi_x, int p, int max_p_index)
 {
-	float nenner = dot_xi_xi - 2* dot_xi_x[max_p_index] +  kernel(p, max_p_index, p, max_p_index);
+	float nenner = dot_xi_xi - 2* dot_xi_x[max_p_index] +  dot_same[p][max_p_index];//kernel(p, max_p_index, p, max_p_index);
 	return nenner;
 }
 
@@ -332,7 +333,7 @@ __device__ float update_xi_xi(float dot_xi_xi, float* dot_xi_x, int p, int max_p
 	dot_xi_xi = lambda * lambda * dot_xi_xi
 		+ 2 * lambda * (1.0 - lambda) * dot_xi_x[max_p_index]
 								 //todo: skalarprodukt von vector mit sich selbst zwischenspeichern
-		+ (1.0 - lambda)*(1.0 - lambda)*kernel(p, max_p_index, p ,max_p_index );
+		+ (1.0 - lambda)*(1.0 - lambda)*dot_same[p][max_p_index];//kernel(p, max_p_index, p ,max_p_index );
 	return dot_xi_xi;
 }
 
@@ -496,7 +497,7 @@ __global__ void cuda_kernel_init_pointer(float* g_data0, float* g_data1 , int g_
 float *g_dot_xi_x, float *g_dot_yi_x, float *g_dot_xi_y, float *g_dot_yi_y,
 int g_nr_of_cache_entries, int g_nr_of_elements,
 								 //todo: bessere variablennamen fuer cache zeugs finden finden
-int *g_look_up_table, int* g_reverse_look_up_table, int* g_circular_array, float* g_data_cache, float* g_temp)
+int *g_look_up_table, int* g_reverse_look_up_table, int* g_circular_array, float* g_data_cache, float* g_dot_same0, float* g_dot_same1)
 {
 	// cache initialisieren
 	look_up_table = g_look_up_table;
@@ -511,6 +512,8 @@ int *g_look_up_table, int* g_reverse_look_up_table, int* g_circular_array, float
 	dot_yi_x = g_dot_yi_x;
 	dot_xi_y = g_dot_xi_y;
 	dot_yi_y = g_dot_yi_y;
+	dot_same[0] = g_dot_same0;
+	dot_same[1] = g_dot_same1;
 
 	// init pointer
 	ca_first = 0;
@@ -564,6 +567,7 @@ __global__ void cuda_kernel_init_kernel()
 			dot_xi_y[t_element]=kernel(0, 0, t_set, t_element);
 			dot_yi_y[t_element]=kernel(1, 0, t_set, t_element);
 		}
+		dot_same[t_set][t_element]=kernel(t_set, t_element, t_set, t_element);
 	}
 
 }
@@ -579,9 +583,9 @@ __global__ void cuda_kernel_init_findmax()
 	dot_yi_yi = kernel(1, 0, 1, 0);
 
 	// find max
-	max_p_index = find_max(0, dot_yi_x, dot_xi_x, dot_xi_yi, dot_xi_xi, &max_p);
+	//max_p_index = find_max(0, dot_yi_x, dot_xi_x, dot_xi_yi, dot_xi_xi, &max_p);
 
-	max_q_index = find_max(1, dot_xi_y, dot_yi_y, dot_xi_yi, dot_yi_yi, &max_q);
+	//max_q_index = find_max(1, dot_xi_y, dot_yi_y, dot_xi_yi, dot_yi_yi, &max_q);
 
 }
 

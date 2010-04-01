@@ -209,13 +209,16 @@ extern "C" void run_cuda_kernel()
 
 	float *d_dot_xi_x, *d_dot_yi_x;
 	float *d_dot_xi_y, *d_dot_yi_y;
+	float *d_dot_same[2];
 
 	cutilSafeCall(cudaMalloc((void**) &d_dot_xi_x, prob[0].l * sizeof(float)));
 	cutilSafeCall(cudaMalloc((void**) &d_dot_yi_x, prob[0].l * sizeof(float)));
+	cutilSafeCall(cudaMalloc((void**) &d_dot_same[0], prob[0].l * sizeof(float)));
 
 	cutilSafeCall(cudaMalloc((void**) &d_dot_xi_y, prob[1].l * sizeof(float)));
 								 // 	 \todo : : prob.l durch was schoeners  ersetzen?
 	cutilSafeCall(cudaMalloc((void**) &d_dot_yi_y, prob[1].l * sizeof(float)));
+	cutilSafeCall(cudaMalloc((void**) &d_dot_same[1], prob[1].l * sizeof(float)));
 
 	reduction_init();
 
@@ -239,22 +242,21 @@ extern "C" void run_cuda_kernel()
 	float* d_data_cache;
 	cutilSafeCall(cudaMalloc( (void**) &d_data_cache, sizeof( float* ) * nr_of_cache_entries * nr_of_elements));
 
-	int temp_size = 2;			 //prob[1].l ;
-	float* d_temp;
-	cutilSafeCall(cudaMalloc( (void**) &d_temp, sizeof( float* ) * temp_size));
-
 	// execute kernels
 
 	cuda_kernel_init_pointer<<<1,1>>>(d_data[0], d_data[1], max_index, prob[0].l, prob[1].l,
 		d_weights[0], d_weights[1],
 		d_dot_xi_x, d_dot_yi_x, d_dot_xi_y, d_dot_yi_y,
 		nr_of_cache_entries, nr_of_elements,
-		d_look_up_table, d_reverse_look_up_table, d_circular_array, d_data_cache, d_temp);
+		d_look_up_table, d_reverse_look_up_table, d_circular_array, d_data_cache, d_dot_same[0], d_dot_same[1]);
 
 	cudaThreadSynchronize();
 	cuda_kernel_init_kernel<<<nblocks, nthreads>>>();
 	cudaThreadSynchronize();
 	cuda_kernel_init_findmax<<<1, 1>>>();
+
+	cudaThreadSynchronize();
+	reduction_findMaximum();
 
 	cudaThreadSynchronize();
 	// check if kernel execution generated and error
@@ -275,13 +277,10 @@ extern "C" void run_cuda_kernel()
 		cutilCheckMsg("Kernel execution failed");
 
 		reduction_findMaximum();
+		//todo: adg usw. berechnen
 	}
 
 	// copy back results and print them
-
-	float h_temp[temp_size];
-
-	cutilSafeCall(cudaMemcpy( &h_temp, d_temp, sizeof(float) * temp_size, cudaMemcpyDeviceToHost));
 
 	cutilSafeCall(cudaMemcpy(h_weights[0],d_weights[0],sizeof(float) * prob[0].l,cudaMemcpyDeviceToHost));
 	cutilSafeCall(cudaMemcpy(h_weights[1],d_weights[1],sizeof(float) * prob[1].l,cudaMemcpyDeviceToHost));
