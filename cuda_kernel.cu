@@ -372,22 +372,29 @@ __device__ int ca_first;
 __device__ int ca_last;
 __device__ int ca_free_pos;		 // safes which pos has no yet been occupied
 
-__device__ void get_data(int id, int set, int pointer)
+__device__ bool ca_cachemiss;
+
+__global__ void cuda_cache_init(int g_nr_of_cache_entries, int g_nr_of_elements,
+int *g_look_up_table, int* g_reverse_look_up_table, int* g_circular_array, float* g_data_cache)
 {
-	//    data[pointer] = (double) id * id;
+	// cache initialisieren
+	look_up_table = g_look_up_table;
+	reverse_look_up_table = g_reverse_look_up_table;
+	circular_array = g_circular_array;
+	data = g_data_cache;
 
-	int i;
-	for(i=0; i<data_size[0]; i++)
+	nr_of_cache_entries = g_nr_of_cache_entries;
+	nr_of_elements = g_nr_of_elements;
+
+	// init pointer
+	ca_first = 0;
+	ca_last = nr_of_cache_entries - 1;
+
+	for(int i=0; i<data_size[0]+data_size[1]; i++)
 	{
-		//printf("set1 = %d, id = %d,  set2 = %d, id = %d res = %f\n", set, id, 0, i,  kernel(set, id, 0, i));
-		data[pointer * nr_of_elements + i] = kernel(set, id, 0, i);
+		look_up_table[i] = -1;
 	}
 
-	for(i=0; i<data_size[1]; i++)
-	{
-		//printf("set1 = %d, id = %d,  set2 = %d, id = %d   res = %f \n", set, id, 1, i,  kernel(set, id, 1, i));
-		data[pointer * nr_of_elements + i + data_size[0]] = kernel(set, id, 1, i);
-	}
 }
 
 
@@ -395,7 +402,7 @@ __device__ void ca_add(int id)
 {
 								 // clean up look up table
 	int last_id = reverse_look_up_table[ circular_array[ca_last] ];
-	if(circular_array[ca_last] != -1)
+	if(circular_array[ca_last] != -1) //test, ob schon alle stellen im cache belegt sind
 	{
 		//pos = look_up_table[ last_id ];
 		look_up_table[ last_id ] = -1;
@@ -462,20 +469,23 @@ __device__ void ca_bring_forward(int pos)
 
 }
 
-
-__device__ float* get_element(int id, int set, int tid)
+__global__ void cuda_cache_update()
 {
-	//printf(" get_element(): id = %d, set = %d \n", id, set);
-	int idset = id + set* data_size[0];
+	int idset;
+	if(max_p > max_q)
+	{
+		idset = max_p_index;
+	} else
+	{
+		idset = max_q_index + data_size[0];
+	}
 
-	//printf("idset = %d \n", idset);
-
-								 // cache miss
 	if( look_up_table[idset] == -1 )
 	{
-		if(tid  == 1)
-			ca_add(idset);
-		get_data(id, set, circular_array[ca_first]);
+		ca_add(idset);
+		ca_cachemiss = true;
+		//get_data(id, set, circular_array[ca_first]);
+
 		//printf("cache miss, id = %d, set = %d\n", id, set);
 	}							 //cache hit
 	else
@@ -485,41 +495,64 @@ __device__ float* get_element(int id, int set, int tid)
 		{
 			ca_bring_forward(look_up_table[idset]);
 		}
+		ca_cachemiss = false;
 	}
-	//printf("get_element = data[%d]  ca_first = %d \n", circular_array[ca_first], ca_first);
-	return &data[circular_array[ca_first] * nr_of_elements];
 }
 
+__global__ void cuda_kernel_computekernels_cache()
+{
+	int tid = threadIdx.x + blockDim.x*blockIdx.x;
 
+								 // falls etwas mehr threads als noetig gestartet wurden
+	if(tid < data_size[0] + data_size[1])
+	{
+		int t_set;
+		int t_element;
+
+		if(tid < data_size[0])
+			t_set = 0;
+		else
+			t_set = 1;
+
+		t_element = tid - (t_set) * data_size[0];
+
+		if (max_p >= max_q)
+		{
+			if( ca_cachemiss == true )
+				data[circular_array[ca_first] * nr_of_elements + tid] = kernel(0, max_p_index, t_set, t_element);
+
+								 //todo: cache einbauen
+			float* computed_kernels = &data[circular_array[ca_first] * nr_of_elements];
+
+			update_xi_x(dot_xi_x, 0, 0, max_p_index, lambda, computed_kernels, tid);
+
+			update_xi_x(dot_xi_y, 0, 1, max_p_index, lambda, computed_kernels, tid);
+		}
+		else
+		{
+			if( ca_cachemiss == true )
+				data[circular_array[ca_first] * nr_of_elements + tid] = kernel(1, max_q_index, t_set, t_element);
+
+			float* computed_kernels = data;
+
+			update_xi_x(dot_yi_y, 1, 1, max_q_index, lambda, computed_kernels, tid);
+
+			update_xi_x(dot_yi_x, 1, 0, max_q_index, lambda, computed_kernels, tid);
+		}
+	}
+}
 // cache ende
 
 __global__ void cuda_kernel_init_pointer(float* g_data0, float* g_data1 , int g_maximum_index, int g_data0_size, int g_data1_size, float* g_weights0, float* g_weights1 ,
 float *g_dot_xi_x, float *g_dot_yi_x, float *g_dot_xi_y, float *g_dot_yi_y,
-int g_nr_of_cache_entries, int g_nr_of_elements,
-								 //todo: bessere variablennamen fuer cache zeugs finden finden
-int *g_look_up_table, int* g_reverse_look_up_table, int* g_circular_array, float* g_data_cache, float* g_dot_same0, float* g_dot_same1)
+float* g_dot_same0, float* g_dot_same1)
 {
-	// cache initialisieren
-	look_up_table = g_look_up_table;
-	reverse_look_up_table = g_reverse_look_up_table;
-	circular_array = g_circular_array;
-	data = g_data_cache;
-
-	nr_of_cache_entries = g_nr_of_cache_entries;
-	nr_of_elements = g_nr_of_elements;
-
 	dot_xi_x = g_dot_xi_x;
 	dot_yi_x = g_dot_yi_x;
 	dot_xi_y = g_dot_xi_y;
 	dot_yi_y = g_dot_yi_y;
 	dot_same[0] = g_dot_same0;
 	dot_same[1] = g_dot_same1;
-
-	// init pointer
-	ca_first = 0;
-	ca_last = nr_of_cache_entries - 1;
-
-	//cache init ende
 
 	//todo: C als parameter uebergeben
 	C = 0.0;

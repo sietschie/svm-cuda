@@ -246,9 +246,11 @@ extern "C" void run_cuda_kernel()
 
 	cuda_kernel_init_pointer<<<1,1>>>(d_data[0], d_data[1], max_index, prob[0].l, prob[1].l,
 		d_weights[0], d_weights[1],
-		d_dot_xi_x, d_dot_yi_x, d_dot_xi_y, d_dot_yi_y,
-		nr_of_cache_entries, nr_of_elements,
-		d_look_up_table, d_reverse_look_up_table, d_circular_array, d_data_cache, d_dot_same[0], d_dot_same[1]);
+		d_dot_xi_x, d_dot_yi_x, d_dot_xi_y, d_dot_yi_y, 
+		d_dot_same[0], d_dot_same[1]);
+
+	cuda_cache_init<<<1,1>>>(nr_of_cache_entries, nr_of_elements,
+		d_look_up_table, d_reverse_look_up_table, d_circular_array, d_data_cache);
 
 	cudaThreadSynchronize();
 	cuda_kernel_init_kernel<<<nblocks, nthreads>>>();
@@ -266,7 +268,14 @@ extern "C" void run_cuda_kernel()
 		cuda_kernel_lambda<<<1, 1>>>();
 		cudaThreadSynchronize();
 								 //todo: nur soviele kernel starten wie wirklich noetig
+		cutilCheckMsg("Kernel execution failed");
 		cuda_kernel_updateWeights<<< nblocks, nthreads >>>();
+		cudaThreadSynchronize();
+		cutilCheckMsg("Kernel execution failed");
+		cuda_cache_update<<<1,1>>>();
+		cudaThreadSynchronize();
+		cutilCheckMsg("Kernel execution failed");
+		cuda_kernel_computekernels_cache<<<nblocks, nthreads>>>();
 		cudaThreadSynchronize();
 		// check if kernel execution generated and error
 		cutilCheckMsg("Kernel execution failed");
