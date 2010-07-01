@@ -389,6 +389,7 @@ int *g_look_up_table, int* g_reverse_look_up_table, int* g_circular_array, float
 	// init pointer
 	ca_first = 0;
 	ca_last = nr_of_cache_entries - 1;
+	ca_free_pos = 0;
 
 	for(int i=0; i<data_size[0]+data_size[1]; i++)
 	{
@@ -533,7 +534,7 @@ __global__ void cuda_kernel_computekernels_cache()
 			if( ca_cachemiss == true )
 				data[circular_array[ca_first] * nr_of_elements + tid] = kernel(1, max_q_index, t_set, t_element);
 
-			float* computed_kernels = data;
+			float* computed_kernels = &data[circular_array[ca_first] * nr_of_elements];
 
 			update_xi_x(dot_yi_y, 1, 1, max_q_index, lambda, computed_kernels, tid);
 

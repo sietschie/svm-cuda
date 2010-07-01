@@ -279,7 +279,6 @@ extern "C" void run_cuda_kernel()
 		cudaThreadSynchronize();
 		// check if kernel execution generated and error
 		cutilCheckMsg("Kernel execution failed");
-		cuda_kernel_computekernels<<<nblocks, nthreads>>>();
 
 		cudaThreadSynchronize();
 		// check if kernel execution generated and error
