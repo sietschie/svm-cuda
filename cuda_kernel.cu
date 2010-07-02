@@ -222,6 +222,80 @@ __global__ void reduce6(int *g_data_index, float *g_data_value, unsigned int set
 		__syncthreads();
 	}
 
+	#ifdef __DEVICE_EMULATION__
+	if (blockSize >= 64)
+	{
+		if (tid < 32)
+		{
+			if(sdata_value[tid] < sdata_value[tid + 32])
+			{
+				sdata_value[tid] = sdata_value[tid + 32];
+				sdata_index[tid] = sdata_index[tid + 32];
+			}
+		}
+		__syncthreads();
+	}
+	if (blockSize >= 32)
+	{
+		if (tid < 16)
+		{
+			if(sdata_value[tid] < sdata_value[tid + 16])
+			{
+				sdata_value[tid] = sdata_value[tid + 16];
+				sdata_index[tid] = sdata_index[tid + 16];
+			}
+		}
+		__syncthreads();
+	}
+	if (blockSize >= 16)
+	{
+		if (tid < 8)
+		{
+			if(sdata_value[tid] < sdata_value[tid + 8])
+			{
+				sdata_value[tid] = sdata_value[tid + 8];
+				sdata_index[tid] = sdata_index[tid + 8];
+			}
+		}
+		__syncthreads();
+	}
+	if (blockSize >= 8)
+	{
+		if (tid < 4)
+		{
+			if(sdata_value[tid] < sdata_value[tid + 4])
+			{
+				sdata_value[tid] = sdata_value[tid + 4];
+				sdata_index[tid] = sdata_index[tid + 4];
+			}
+		}
+		__syncthreads();
+	}
+	if (blockSize >= 4)
+	{
+		if (tid < 2)
+		{
+			if(sdata_value[tid] < sdata_value[tid + 2])
+			{
+				sdata_value[tid] = sdata_value[tid + 2];
+				sdata_index[tid] = sdata_index[tid + 2];
+			}
+		}
+		__syncthreads();
+	}
+	if (blockSize >= 2)
+	{
+		if (tid < 1)
+		{
+			if(sdata_value[tid] < sdata_value[tid + 1])
+			{
+				sdata_value[tid] = sdata_value[tid + 1];
+				sdata_index[tid] = sdata_index[tid + 1];
+			}
+		}
+		__syncthreads();
+	}
+	#else
 	if (tid < 32)
 	{
 		if (blockSize >= 64)
@@ -279,6 +353,7 @@ __global__ void reduce6(int *g_data_index, float *g_data_value, unsigned int set
 
 		}
 	}
+	#endif
 	if (tid == 0)
 	{
 		g_data_index[blockIdx.x] = sdata_index[0];
