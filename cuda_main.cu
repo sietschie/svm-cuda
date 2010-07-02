@@ -155,7 +155,7 @@ void reduction_findMaximum()
  *
  * @todo more work that needs to be done
  */
-extern "C" void run_cuda_kernel()
+extern "C" void run_cuda_kernel(struct svm_parameter param)
 {
 
 	printf(" number of vectors in class 1 = %d and in class 2 = %d \n", prob[0].l, prob[1].l);
@@ -247,7 +247,7 @@ extern "C" void run_cuda_kernel()
 	cuda_kernel_init_pointer<<<1,1>>>(d_data[0], d_data[1], max_index, prob[0].l, prob[1].l,
 		d_weights[0], d_weights[1],
 		d_dot_xi_x, d_dot_yi_x, d_dot_xi_y, d_dot_yi_y, 
-		d_dot_same[0], d_dot_same[1]);
+		d_dot_same[0], d_dot_same[1], param);
 
 	cuda_cache_init<<<1,1>>>(nr_of_cache_entries, nr_of_elements,
 		d_look_up_table, d_reverse_look_up_table, d_circular_array, d_data_cache);

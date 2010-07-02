@@ -6,7 +6,6 @@
 __device__ float* g_data[2];
 __device__ int maximum_index;
 __device__ int data_size[2];
-__device__ float C;
 __device__ float* g_weights[2];
 __device__ float lambda;
 __device__ int max_p_index;
@@ -23,6 +22,8 @@ __device__ float* dot_yi_y;
 __device__ float* dot_same[2];
 
 __device__ float* get_element(int id, int set);
+
+__device__ struct svm_parameter param;
 
 __device__ float dot(float* px, float *py)
 {
@@ -49,33 +50,46 @@ inline float powi(float base, int times)
 	return ret;
 }
 
-
-//float kernel_linear(int set1, int element1, int set2, int element2) //todo: als template implementieren
-__device__ float kernel(int set1, int element1, int set2, int element2)
+__device__ float kernel_linear(int set1, int element1, int set2, int element2) //todo: als template implementieren
 {
 	float* px = &(g_data[set1][ element1 * maximum_index ]);
 	float* py = &(g_data[set2][ element2 * maximum_index ]);
 
 	float ret = dot(px, py );
 	if(set1 == set2 && element1 == element2)
-		ret += C;
+		ret += param.C;
 	return ret;
 }
 
+__device__ float power(float base, int exponent) { //todo: effizienter berechnen? (squaring, bitshifts)
+	int i;
+	float res = base; 
+	for(i=0;i<exponent;i++) 
+	{
+		res  *= base;
+	}
+	return res;
+}
 
-/*float kernel_poly(int set1, int element1, int set2, int element2)
+__device__ float kernel_poly(int set1, int element1, int set2, int element2)
 {
-	float ret = powi(param.gamma*dot(prob[set1].x[element1], prob[set2].x[element2])+param.coef0,param.degree);
+	float* px = &(g_data[set1][ element1 * maximum_index ]);
+	float* py = &(g_data[set2][ element2 * maximum_index ]);
+
+	float ret = power(param.gamma*dot(px, py )+param.coef0,param.degree);
 	if(set1 == set2 && element1 == element2)
 		ret += param.C;
 	return ret;
 }
 
-float kernel_rbf(int set1, int element1, int set2, int element2)
+__device__ float kernel_rbf(int set1, int element1, int set2, int element2)
 {
-	float dots = ( dot(prob[set1].x[element1], prob[set1].x[element1])+
-						dot(prob[set1].x[element1], prob[set2].x[element2])-2*
-						dot(prob[set1].x[element1], prob[set2].x[element2]));
+	float* px = &(g_data[set1][ element1 * maximum_index ]);
+	float* py = &(g_data[set2][ element2 * maximum_index ]);
+
+	float dots = ( dot(px, px)+
+						dot(py, py)-2*
+						dot(px, py)); //todo: dot(x,x) vorberechnen??
 	float wgamma = -param.gamma*dots;
 	float wexp = exp(wgamma);
 
@@ -85,14 +99,36 @@ float kernel_rbf(int set1, int element1, int set2, int element2)
 
 }
 
-float kernel_sigmoid(int set1, int element1, int set2, int element2)
+__device__ float kernel_sigmoid(int set1, int element1, int set2, int element2)
 {
-	float ret = tanh(param.gamma*dot(prob[set1].x[element1], prob[set2].x[element2])+param.coef0);
+	float* px = &(g_data[set1][ element1 * maximum_index ]);
+	float* py = &(g_data[set2][ element2 * maximum_index ]);
+
+	float ret = tanh(param.gamma*dot(px, py)+param.coef0);
 	if(set1 == set2 && element1 == element2)
 		ret += param.C;
 	return ret;
 }
-*/
+
+__device__ float kernel(int set1, int element1, int set2, int element2)
+{
+	switch(param.kernel_type)
+	{
+		case POLY:
+			return kernel_poly(set1, element1, set2, element2);
+		case RBF:
+			float res = kernel_rbf(set1, element1, set2, element2);
+			//printf("(%d %d - %d %d) = %f \n", set1, element1, set2, element2, res);
+			return res;
+		case SIGMOID:
+			return kernel_sigmoid(set1, element1, set2, element2);
+//		case PRECOMPUTED:
+//			return kernel_precomputed(set1, element1, set2, element2);
+		case LINEAR:
+		default:
+			return kernel_linear(set1, element1, set2, element2);
+	}
+}
 
 __device__ int find_max(int p, float *dot_yi_x, float* dot_xi_x, float dot_xi_yi, float dot_xi_xi, float *max_p)
 {
@@ -621,7 +657,7 @@ __global__ void cuda_kernel_computekernels_cache()
 
 __global__ void cuda_kernel_init_pointer(float* g_data0, float* g_data1 , int g_maximum_index, int g_data0_size, int g_data1_size, float* g_weights0, float* g_weights1 ,
 float *g_dot_xi_x, float *g_dot_yi_x, float *g_dot_xi_y, float *g_dot_yi_y,
-float* g_dot_same0, float* g_dot_same1)
+float* g_dot_same0, float* g_dot_same1, struct svm_parameter g_param)
 {
 	dot_xi_x = g_dot_xi_x;
 	dot_yi_x = g_dot_yi_x;
@@ -630,8 +666,6 @@ float* g_dot_same0, float* g_dot_same1)
 	dot_same[0] = g_dot_same0;
 	dot_same[1] = g_dot_same1;
 
-	//todo: C als parameter uebergeben
-	C = 0.0;
 	//todo: gleich die richtigen arrays senden
 	g_data[0] = g_data0;
 	g_data[1] = g_data1;
@@ -643,6 +677,7 @@ float* g_dot_same0, float* g_dot_same1)
 	g_weights[0] = g_weights0;
 	g_weights[1] = g_weights1;
 
+	param = g_param;
 }
 
 
@@ -772,56 +807,6 @@ __global__ void cuda_kernel_lambda()
 	}
 
 }
-
-
-__global__ void cuda_kernel_computekernels()
-{
-	int tid = threadIdx.x + blockDim.x*blockIdx.x;
-
-								 // falls etwas mehr threads als noetig gestartet wurden
-	if(tid < data_size[0] + data_size[1])
-	{
-		int t_set;
-		int t_element;
-
-		if(tid < data_size[0])
-			t_set = 0;
-		else
-			t_set = 1;
-
-		t_element = tid - (t_set) * data_size[0];
-
-		if (max_p >= max_q)
-		{
-			data[tid] = kernel(0, max_p_index, t_set, t_element);
-
-								 //todo: cache einbauen
-			float* computed_kernels = data;
-
-			update_xi_x(dot_xi_x, 0, 0, max_p_index, lambda, computed_kernels, tid);
-
-			update_xi_x(dot_xi_y, 0, 1, max_p_index, lambda, computed_kernels, tid);
-		}
-		else
-		{
-			if(tid < data_size[0])
-			{
-				data[tid] = kernel(1, max_q_index, 0, tid);
-			}
-			else
-			{
-				data[tid] = kernel(1, max_q_index, 1, tid - data_size[0]);
-			}
-
-			float* computed_kernels = data;
-
-			update_xi_x(dot_yi_y, 1, 1, max_q_index, lambda, computed_kernels, tid);
-
-			update_xi_x(dot_yi_x, 1, 0, max_q_index, lambda, computed_kernels, tid);
-		}
-	}
-}
-
 
 __global__ void cuda_kernel_distance()
 {
