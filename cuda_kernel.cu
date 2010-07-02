@@ -633,7 +633,7 @@ __global__ void cuda_kernel_updateWeights()
 			g_weights[0][tid] *= lambda;
 
 		}
-		if(tid == 0)
+		if(tid == max_p_index)
 		{
 			g_weights[0][max_p_index] += 1.0 - lambda;
 		}
@@ -643,7 +643,7 @@ __global__ void cuda_kernel_updateWeights()
 			g_weights[1][tid] *= lambda;
 
 		}
-		if(tid == 0)
+		if(tid == max_q_index)
 		{
 			g_weights[1][max_q_index] += 1.0 - lambda;
 		}
