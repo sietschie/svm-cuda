@@ -30,6 +30,7 @@ struct svm_parameter
 	float eps;	/* stopping criteria */
 	float C;	/* for C_SVC, EPSILON_SVR and NU_SVR */
 	int verbosity;
+	int maximum_iterations;
 
 };
 
