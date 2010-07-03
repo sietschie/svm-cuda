@@ -209,7 +209,7 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	float** weights, flo
 	reduction_init();
 
 	//cache parameters
-	nr_of_cache_entries = 4;
+	nr_of_cache_entries = param.cache_size;
 	nr_of_elements = prob[0].l + prob[1].l;
 
 	// allocate memory
