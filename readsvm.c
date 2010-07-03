@@ -325,9 +325,9 @@ struct svm_model *svm_load_model(const char *model_file_name)
 		else if(strcmp(cmd,"degree")==0)
 			fscanf(fp,"%d",&param.degree);
 		else if(strcmp(cmd,"gamma")==0)
-			fscanf(fp,"%lf",&param.gamma);
+			fscanf(fp,"%f",&param.gamma);
 		else if(strcmp(cmd,"coef0")==0)
-			fscanf(fp,"%lf",&param.coef0);
+			fscanf(fp,"%f",&param.coef0);
 //		else if(strcmp(cmd,"nr_class")==0)
 //			fscanf(fp,"%d",&model->nr_class);
 //		else if(strcmp(cmd,"total_sv")==0)
