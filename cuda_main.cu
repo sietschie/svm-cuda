@@ -76,7 +76,6 @@ void reduction_findMaximum()
 	reduction_startKernel(reduction_length[0], reduction_nthreads[0], d_reduction_index[0], d_reduction_value[0], 0, 1,0);
 	reduction_startKernel(reduction_length[1], reduction_nthreads[1], d_reduction_index[1], d_reduction_value[1], 1, 1,0);
 
-	//reduce6<256><<<reduction_length[1], reduction_nthreads[1]>>>(d_reduction_index[1], d_reduction_value[1], 1, 1, 0);
 	cudaThreadSynchronize();
 
 	int temp_reduction_length[2];
@@ -119,15 +118,6 @@ void reduction_findMaximum()
 		reduction_length[k] = temp_reduction_length[k];
 		reduction_nthreads[k] = temp_reduction_nthreads[k];
 	}
-
-	/*		float reduction[2];
-			int reduction_idx[2];
-			cutilSafeCall(cudaMemcpy( &reduction, d_reduction_value[0], sizeof(float) * 1, cudaMemcpyDeviceToHost));
-			cutilSafeCall(cudaMemcpy( &reduction_idx, d_reduction_index[0], sizeof(int), cudaMemcpyDeviceToHost));
-			int j;
-			for(j=0;j<1;j++)
-				printf(" %d : %f - %d \n", j, reduction[j], reduction_idx[j]);
-	*/
 }
 
 
@@ -271,7 +261,7 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	float** weights, flo
 		cutilCheckMsg("Kernel execution failed");
 
 		reduction_findMaximum();
-		//todo: adg usw. berechnen
+
 		float max1[1];
 		float max2[1];
 		int max1_idx[1];
@@ -317,7 +307,7 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	float** weights, flo
 		}
 	}
 
-	// copy back results and print them
+	// copy results back and print them
 
 	cutilSafeCall(cudaMemcpy(h_weights[0],d_weights[0],sizeof(float) * prob[0].l,cudaMemcpyDeviceToHost));
 	cutilSafeCall(cudaMemcpy(h_weights[1],d_weights[1],sizeof(float) * prob[1].l,cudaMemcpyDeviceToHost));
@@ -334,18 +324,8 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	float** weights, flo
 			}
 		}
 	}
-	//todo: free memory
 
 	// free memory
-
-	//  cudaFree(d_x);
-	//  free(h_x);
-
-	//printf(" temp = %f  \n ", h_temp);
-	//for(int i = 0; i<temp_size; i++)
-	//{
-	//  printf(" %d : %f \n", i, h_temp[i]);
-	//}
 	cudaFree(d_data[0]);
 	cudaFree(d_data[1]);
 	cudaFree(d_weights[0]);
@@ -368,6 +348,7 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	float** weights, flo
 	cudaFree(d_circular_array);
 	cudaFree(d_data_cache);
 	
+	// values that will be returned
 	*rho = *h_rho;
 	weights[0] = h_weights[0];
 	weights[1] = h_weights[1];

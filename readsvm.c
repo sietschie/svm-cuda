@@ -272,11 +272,6 @@ struct svm_model *svm_load_model(const char *model_file_name)
 
 	struct svm_model *model = Malloc(struct svm_model,1);
 	struct svm_parameter param = model->param;
-//	model->rho = NULL;
-//	model->probA = NULL;
-//	model->probB = NULL;
-//	model->label = NULL;
-//	model->nSV = NULL;
 
 	char cmd[81];
 	while(1)
@@ -293,7 +288,6 @@ struct svm_model *svm_load_model(const char *model_file_name)
 			} else
 			{
 				fprintf(stderr,"unknown svm type.\n");
-//				free(model->rho);
 				free(model->label);
 				free(model->nSV);
 				free(model);
@@ -315,7 +309,6 @@ struct svm_model *svm_load_model(const char *model_file_name)
 			if(kernel_type_table[i] == NULL)
 			{
 				fprintf(stderr,"unknown kernel function.\n");
-//				free(model->rho);
 				free(model->label);
 				free(model->nSV);
 				free(model);
@@ -334,23 +327,16 @@ struct svm_model *svm_load_model(const char *model_file_name)
 //			fscanf(fp,"%d",&model->l);
 		else if(strcmp(cmd,"rho")==0)
 		{
-//			int n = model->nr_class * (model->nr_class-1)/2;
-//			model->rho = Malloc(double,n);
-//			for(int i=0;i<n;i++)
 				fscanf(fp,"%lf",&model->rho);
 		}
 		else if(strcmp(cmd,"label")==0)
 		{
-//			int n = model->nr_class;
-//			model->label = Malloc(int,n);
             int i;
 			for(i=0;i<2;i++)
 				fscanf(fp,"%d",&model->label[i]);
 		}
 		else if(strcmp(cmd,"nr_sv")==0)
 		{
-//			int n = model->nr_class;
-//			model->nSV = Malloc(int,n);
 			int i;
 			for(i=0;i<2;i++)
 				fscanf(fp,"%d",&model->nSV[i]);
@@ -367,9 +353,6 @@ struct svm_model *svm_load_model(const char *model_file_name)
 		else
 		{
 			fprintf(stderr,"unknown text in model file: [%s]\n",cmd);
-//			free(model->rho);
-//			free(model->label);
-//			free(model->nSV);
 			free(model);
 			return NULL;
 		}
@@ -399,10 +382,7 @@ struct svm_model *svm_load_model(const char *model_file_name)
 
 	fseek(fp,pos,SEEK_SET);
 
-//	int m = model->nr_class - 1;
 	int l = model->l;
-//	model->sv_coef = Malloc(double *,m);
-
 
 	int i;
 	for(i=0;i<2;i++) {
@@ -435,17 +415,7 @@ struct svm_model *svm_load_model(const char *model_file_name)
 
 		*(model->SV[ia[cs]]) = &x_space[j]; //TODO: warum * davor schreiben, damit es keine warnung gibt?
 
-//		struct svm_node **SV[2]
-//		struct svm_node *x_space[2];
-
-
 		model->weights[cs][ia[cs]] = weight;
-//		int k;
-//		for(k=1;k<m;k++)
-//		{
-//			p = strtok(NULL, " \t");
-//			model->sv_coef[k][i] = strtod(p,&endptr);
-//		}
 
 		while(1)
 		{
@@ -467,6 +437,6 @@ struct svm_model *svm_load_model(const char *model_file_name)
 	if (ferror(fp) != 0 || fclose(fp) != 0)
 		return NULL;
 
-	model->free_sv = 1;	// XXX
+	//model->free_sv = 1;	// XXX
 	return model;
 }
