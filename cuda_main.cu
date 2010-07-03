@@ -68,8 +68,6 @@ void reduction_init()
 		cutilSafeCall(cudaMalloc((void**) &d_reduction_value[i], reduction_length[i] * sizeof(float)));
 		cutilSafeCall(cudaMalloc((void**) &d_reduction_index[i], reduction_length[i] * sizeof(int)));
 	}
-
-	printf(" rl: %d, thr: %d prob: %d and rl: %d thr: %d prob: %d \n", reduction_length[0], reduction_nthreads[0], prob[0].l, reduction_length[1], reduction_nthreads[1], prob[1].l);
 }
 
 
@@ -130,21 +128,6 @@ void reduction_findMaximum()
 			for(j=0;j<1;j++)
 				printf(" %d : %f - %d \n", j, reduction[j], reduction_idx[j]);
 	*/
-	float max1[1];
-	float max2[1];
-	int max1_idx[1];
-	int max2_idx[1];
-	cutilSafeCall(cudaMemcpy( &max1, d_reduction_value[0], sizeof(float), cudaMemcpyDeviceToHost));
-	cutilSafeCall(cudaMemcpy( &max2, d_reduction_value[1], sizeof(float), cudaMemcpyDeviceToHost));
-	cutilSafeCall(cudaMemcpy( &max1_idx, d_reduction_index[0], sizeof(int), cudaMemcpyDeviceToHost));
-	cutilSafeCall(cudaMemcpy( &max2_idx, d_reduction_index[1], sizeof(int), cudaMemcpyDeviceToHost));
-
-	printf("max[0] = %d (%f)   max[1] = %d (%f)  \n", max1_idx[0], max1[0], max2_idx[0], max2[0]);
-
-	cudaThreadSynchronize();
-
-	// check if kernel execution generated and error
-	cutilCheckMsg("Kernel execution failed");
 }
 
 
@@ -157,16 +140,14 @@ void reduction_findMaximum()
  */
 extern "C" void run_cuda_kernel(struct svm_parameter param)
 {
-
-	printf(" number of vectors in class 1 = %d and in class 2 = %d \n", prob[0].l, prob[1].l);
-
 	int   nblocks, nthreads;	 //, nsize, n;
 
 	// set number of blocks, and threads per block
 
 	nblocks  = ((prob[0].l + prob[1].l - 1) / maxNumThreadsPerBlock) + 1;
 	nthreads = maxNumThreadsPerBlock;
-	printf("blocks: %d \n", nblocks);
+	if(param.verbosity == 2)
+		printf("blocks: %d \n", nblocks);
 
 	// allocate memory for array
 
@@ -286,6 +267,24 @@ extern "C" void run_cuda_kernel(struct svm_parameter param)
 
 		reduction_findMaximum();
 		//todo: adg usw. berechnen
+		if(param.verbosity == 2) 
+		{
+			float max1[1];
+			float max2[1];
+			int max1_idx[1];
+			int max2_idx[1];
+			cutilSafeCall(cudaMemcpy( &max1, d_reduction_value[0], sizeof(float), cudaMemcpyDeviceToHost));
+			cutilSafeCall(cudaMemcpy( &max2, d_reduction_value[1], sizeof(float), cudaMemcpyDeviceToHost));
+			cutilSafeCall(cudaMemcpy( &max1_idx, d_reduction_index[0], sizeof(int), cudaMemcpyDeviceToHost));
+			cutilSafeCall(cudaMemcpy( &max2_idx, d_reduction_index[1], sizeof(int), cudaMemcpyDeviceToHost));
+
+			printf("max[0] = %d (%f)   max[1] = %d (%f)  \n", max1_idx[0], max1[0], max2_idx[0], max2[0]);
+		}
+
+		cudaThreadSynchronize();
+
+		// check if kernel execution generated and error
+		cutilCheckMsg("Kernel execution failed");
 	}
 
 	// copy back results and print them
@@ -293,16 +292,18 @@ extern "C" void run_cuda_kernel(struct svm_parameter param)
 	cutilSafeCall(cudaMemcpy(h_weights[0],d_weights[0],sizeof(float) * prob[0].l,cudaMemcpyDeviceToHost));
 	cutilSafeCall(cudaMemcpy(h_weights[1],d_weights[1],sizeof(float) * prob[1].l,cudaMemcpyDeviceToHost));
 
-	for(int i=0;i<2;i++)
+	if(param.verbosity == 2)
 	{
-		printf("\n h_weights[ %d ]:", i);
-		for(int j=0; j<prob[i].l; j++)
+		for(int i=0;i<2;i++)
 		{
-			if(h_weights[i][j] != 0.0)
-				printf(" %d:%f \n", j, h_weights[i][j]);
+			printf("\n h_weights[ %d ]:", i);
+			for(int j=0; j<prob[i].l; j++)
+			{
+				if(h_weights[i][j] != 0.0)
+					printf(" %d:%f \n", j, h_weights[i][j]);
+			}
 		}
 	}
-
 	//todo: free memory
 
 	// free memory

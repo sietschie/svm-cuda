@@ -29,6 +29,7 @@ struct svm_parameter
 	int cache_size; /* in MB */
 	float eps;	/* stopping criteria */
 	float C;	/* for C_SVC, EPSILON_SVR and NU_SVR */
+	int verbosity;
 
 };
 

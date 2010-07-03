@@ -25,6 +25,7 @@ void exit_with_help()
 	"-c cost : set the parameter C of C-SVC (default 1)\n"
 	"-m cachesize : set cache size (default 10)\n"
 	"-e epsilon : set tolerance of termination criterion (default 0.001)\n"
+	"-v level : set verbosity level (default 1)\n"
 	);
 	exit(1);
 }
@@ -41,6 +42,7 @@ void parse_command_line(int argc, char **argv, char *input_file_name, char *mode
 	param.cache_size = 10;
 	param.C = 1;
 	param.eps = 1e-3;
+	param.verbosity = 1;
 
 	// parse options
 	for(i=1;i<argc;i++)
@@ -70,6 +72,9 @@ void parse_command_line(int argc, char **argv, char *input_file_name, char *mode
 				break;
 			case 'e':
 				param.eps = atof(argv[i]);
+				break;
+			case 'v':
+				param.verbosity = atoi(argv[i]);
 				break;
 			default:
 				fprintf(stderr,"Unknown option: -%c\n", argv[i-1][1]);
@@ -116,7 +121,11 @@ int main (int argc, char ** argv)
 	//param.gamma = 1.0 / 12.0;
 	printf("gamma = %f\n", param.gamma);
 		
-	printf("vector dimension: %d \n", max_index);
+	if(param.verbosity == 1)
+	{
+		printf("vector dimension: %d \n", max_index);
+		printf(" number of vectors in class 1 = %d and in class 2 = %d \n", prob[0].l, prob[1].l);
+	}
 
 	run_cuda_kernel(param);
 
