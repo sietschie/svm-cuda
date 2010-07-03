@@ -113,7 +113,7 @@ int main (int argc, char ** argv)
     if(param.gamma == 0 && max_index > 0)
 		param.gamma = 1.0/max_index;
 
-	if(param.verbosity == 1)
+	if(param.verbosity >= 1)
 	{
 		printf("vector dimension: %d \n", max_index);
 		printf(" number of vectors in class 1 = %d and in class 2 = %d \n", prob[0].l, prob[1].l);
