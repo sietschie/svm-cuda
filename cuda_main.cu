@@ -346,6 +346,28 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	float** weights, flo
 	//{
 	//  printf(" %d : %f \n", i, h_temp[i]);
 	//}
+	cudaFree(d_data[0]);
+	cudaFree(d_data[1]);
+	cudaFree(d_weights[0]);
+	cudaFree(d_weights[1]);
+
+	cudaFree(d_distance);
+	cudaFree(d_rho);
+	cudaFree(d_dot_xi_x);
+	cudaFree(d_dot_yi_x);
+	cudaFree(d_dot_same[0]);
+	cudaFree(d_dot_xi_y);
+	cudaFree(d_dot_yi_y);
+	cudaFree(d_dot_same[1]);
+	cudaFree(d_reduction_index[0]);
+	cudaFree(d_reduction_value[0]);
+	cudaFree(d_reduction_index[1]);
+	cudaFree(d_reduction_value[1]);
+	cudaFree(d_look_up_table);
+	cudaFree(d_reverse_look_up_table);
+	cudaFree(d_circular_array);
+	cudaFree(d_data_cache);
+	
 	*rho = *h_rho;
 	weights[0] = h_weights[0];
 	weights[1] = h_weights[1];
