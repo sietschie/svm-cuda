@@ -104,23 +104,15 @@ void parse_command_line(int argc, char **argv, char *input_file_name, char *mode
 
 int main (int argc, char ** argv)
 {
-	printf("svm on cuda started!\n");
-	
     char input_filename[1024];
     char model_filename[1024];
 
     parse_command_line(argc, argv, input_filename, model_filename);
 
 	read_problem(input_filename);
-	printf("gamma = %f\n", param.gamma);
     if(param.gamma == 0 && max_index > 0)
 		param.gamma = 1.0/max_index;
-	printf("gamma = %f\n", param.gamma);
-	printf("c = %f\n", param.C);
 
-	//param.gamma = 1.0 / 12.0;
-	printf("gamma = %f\n", param.gamma);
-		
 	if(param.verbosity == 1)
 	{
 		printf("vector dimension: %d \n", max_index);
