@@ -269,29 +269,46 @@ extern "C" void run_cuda_kernel(struct svm_parameter param)
 
 		reduction_findMaximum();
 		//todo: adg usw. berechnen
+		float max1[1];
+		float max2[1];
+		int max1_idx[1];
+		int max2_idx[1];
+		cutilSafeCall(cudaMemcpy( &max1, d_reduction_value[0], sizeof(float), cudaMemcpyDeviceToHost));
+		cutilSafeCall(cudaMemcpy( &max2, d_reduction_value[1], sizeof(float), cudaMemcpyDeviceToHost));
+		cutilSafeCall(cudaMemcpy( &max1_idx, d_reduction_index[0], sizeof(int), cudaMemcpyDeviceToHost));
+		cutilSafeCall(cudaMemcpy( &max2_idx, d_reduction_index[1], sizeof(int), cudaMemcpyDeviceToHost));
+
 		if(param.verbosity == 2) 
 		{
-			float max1[1];
-			float max2[1];
-			int max1_idx[1];
-			int max2_idx[1];
-			cutilSafeCall(cudaMemcpy( &max1, d_reduction_value[0], sizeof(float), cudaMemcpyDeviceToHost));
-			cutilSafeCall(cudaMemcpy( &max2, d_reduction_value[1], sizeof(float), cudaMemcpyDeviceToHost));
-			cutilSafeCall(cudaMemcpy( &max1_idx, d_reduction_index[0], sizeof(int), cudaMemcpyDeviceToHost));
-			cutilSafeCall(cudaMemcpy( &max2_idx, d_reduction_index[1], sizeof(int), cudaMemcpyDeviceToHost));
-
 			printf("max[0] = %d (%f)   max[1] = %d (%f)  \n", max1_idx[0], max1[0], max2_idx[0], max2[0]);
 		}
 
 		float h_distance[1];
 		cutilSafeCall(cudaMemcpy( &h_distance, d_distance, sizeof(float), cudaMemcpyDeviceToHost));
-		
-		printf("distance = %f \n", *h_distance);
 
 		cudaThreadSynchronize();
-
 		// check if kernel execution generated and error
 		cutilCheckMsg("Kernel execution failed");
+		
+        double adg = max1[0] + max2[0];
+        double rdg_nenner = *h_distance - adg;
+        double rdg;
+
+        if (rdg_nenner <= 0)
+        {
+            rdg = HUGE_VAL;
+        }
+        else
+        {
+            rdg = adg / rdg_nenner;
+        }
+
+		if( param.verbosity >= 1 )
+		{
+			printf("distance = %e " , *h_distance);
+			printf("adg = %e " , adg);
+			printf("rdg = %e \n", rdg);
+		}
 	}
 
 	// copy back results and print them
