@@ -190,8 +190,10 @@ extern "C" void run_cuda_kernel(struct svm_parameter param)
 
 	float *d_dot_xi_x, *d_dot_yi_x;
 	float *d_dot_xi_y, *d_dot_yi_y;
+	float *d_distance;
 	float *d_dot_same[2];
 
+	cutilSafeCall(cudaMalloc((void**) &d_distance, sizeof(float)));
 	cutilSafeCall(cudaMalloc((void**) &d_dot_xi_x, prob[0].l * sizeof(float)));
 	cutilSafeCall(cudaMalloc((void**) &d_dot_yi_x, prob[0].l * sizeof(float)));
 	cutilSafeCall(cudaMalloc((void**) &d_dot_same[0], prob[0].l * sizeof(float)));
@@ -228,7 +230,7 @@ extern "C" void run_cuda_kernel(struct svm_parameter param)
 	cuda_kernel_init_pointer<<<1,1>>>(d_data[0], d_data[1], max_index, prob[0].l, prob[1].l,
 		d_weights[0], d_weights[1],
 		d_dot_xi_x, d_dot_yi_x, d_dot_xi_y, d_dot_yi_y, 
-		d_dot_same[0], d_dot_same[1], param);
+		d_dot_same[0], d_dot_same[1], d_distance, param);
 
 	cuda_cache_init<<<1,1>>>(nr_of_cache_entries, nr_of_elements,
 		d_look_up_table, d_reverse_look_up_table, d_circular_array, d_data_cache);
@@ -280,6 +282,11 @@ extern "C" void run_cuda_kernel(struct svm_parameter param)
 
 			printf("max[0] = %d (%f)   max[1] = %d (%f)  \n", max1_idx[0], max1[0], max2_idx[0], max2[0]);
 		}
+
+		float h_distance[1];
+		cutilSafeCall(cudaMemcpy( &h_distance, d_distance, sizeof(float), cudaMemcpyDeviceToHost));
+		
+		printf("distance = %f \n", *h_distance);
 
 		cudaThreadSynchronize();
 

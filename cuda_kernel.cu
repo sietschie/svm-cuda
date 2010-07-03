@@ -15,6 +15,7 @@ __device__ float max_q;
 __device__ float dot_xi_yi;		 // <x_i, y_i >
 __device__ float dot_xi_xi;		 // <x_i, x_i >
 __device__ float dot_yi_yi;		 // <y_i, y_i >
+__device__ float* distance;
 __device__ float* dot_xi_x;
 __device__ float* dot_yi_x;
 __device__ float* dot_xi_y;
@@ -657,7 +658,7 @@ __global__ void cuda_kernel_computekernels_cache()
 
 __global__ void cuda_kernel_init_pointer(float* g_data0, float* g_data1 , int g_maximum_index, int g_data0_size, int g_data1_size, float* g_weights0, float* g_weights1 ,
 float *g_dot_xi_x, float *g_dot_yi_x, float *g_dot_xi_y, float *g_dot_yi_y,
-float* g_dot_same0, float* g_dot_same1, struct svm_parameter g_param)
+float* g_dot_same0, float* g_dot_same1, float* g_distance, struct svm_parameter g_param)
 {
 	dot_xi_x = g_dot_xi_x;
 	dot_yi_x = g_dot_yi_x;
@@ -677,6 +678,8 @@ float* g_dot_same0, float* g_dot_same1, struct svm_parameter g_param)
 	g_weights[0] = g_weights0;
 	g_weights[1] = g_weights1;
 
+	distance = g_distance;
+	
 	param = g_param;
 }
 
@@ -806,6 +809,7 @@ __global__ void cuda_kernel_lambda()
 		dot_xi_yi = update_xi_yi(dot_xi_yi, dot_xi_y, max_q_index, lambda);
 	}
 
+	*distance = dot_xi_xi + dot_yi_yi - 2 * dot_xi_yi;
 }
 
 __global__ void cuda_kernel_distance()
