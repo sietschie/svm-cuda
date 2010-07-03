@@ -300,11 +300,15 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	float** weights, flo
 
 		if( param.verbosity >= 1 )
 		{
-			printf("distance = %e " , *h_distance);
-			printf("rho = %e " , *h_rho);
+			printf("iter = %d ", i);
+			printf("dist = %e " , *h_distance);
+			//printf("rho = %e " , *h_rho);
 			printf("adg = %e " , adg);
 			printf("rdg = %e \n", rdg);
 		}
+		
+		if( rdg < param.eps )
+			break;
 	}
 
 	// copy results back and print them
