@@ -249,7 +249,7 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	float** weights, flo
 	cudaThreadSynchronize();
 	// check if kernel execution generated and error
 	cutilCheckMsg("Kernel execution failed");
-	for(int i = 0; i<3; i++)
+	for(int i = 0; i<param.maximum_iterations; i++)
 	{
 		cuda_kernel_lambda<<<1, 1>>>();
 		cudaThreadSynchronize();

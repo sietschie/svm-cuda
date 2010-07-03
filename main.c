@@ -26,6 +26,7 @@ void exit_with_help()
 	"-m cachesize : set cache size (default 10)\n"
 	"-e epsilon : set tolerance of termination criterion (default 0.001)\n"
 	"-v level : set verbosity level (default 1)\n"
+	"-i iterations : set the maximum number of iterations (default 100)\n"
 	);
 	exit(1);
 }
@@ -43,6 +44,7 @@ void parse_command_line(int argc, char **argv, char *input_file_name, char *mode
 	param.C = 1;
 	param.eps = 1e-3;
 	param.verbosity = 1;
+	param.maximum_iterations = 100;
 
 	// parse options
 	for(i=1;i<argc;i++)
@@ -75,6 +77,9 @@ void parse_command_line(int argc, char **argv, char *input_file_name, char *mode
 				break;
 			case 'v':
 				param.verbosity = atoi(argv[i]);
+				break;
+			case 'i':
+				param.maximum_iterations = atoi(argv[i]);
 				break;
 			default:
 				fprintf(stderr,"Unknown option: -%c\n", argv[i-1][1]);
