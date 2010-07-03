@@ -406,7 +406,7 @@ struct svm_model *svm_load_model(const char *model_file_name)
 
 	int i;
 	for(i=0;i<2;i++) {
-		model->weights[i] = Malloc(double,model->nSV[i]);
+		model->weights[i] = Malloc(float,model->nSV[i]);
         model->SV[i] = Malloc(struct svm_node*,model->nSV[i]);
 	}
 

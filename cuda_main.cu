@@ -138,7 +138,7 @@ void reduction_findMaximum()
  *
  * @todo more work that needs to be done
  */
-extern "C" void run_cuda_kernel(struct svm_parameter param)
+extern "C" void run_cuda_kernel(struct svm_parameter param,	float** weights, float *rho)
 {
 	int   nblocks, nthreads;	 //, nsize, n;
 
@@ -154,6 +154,7 @@ extern "C" void run_cuda_kernel(struct svm_parameter param)
 	float* d_data[2];
 	float* d_weights[2];
 	float* h_weights[2];
+	float h_rho[1];
 
 	int i;
 	for(i=0;i<2;i++)
@@ -186,14 +187,16 @@ extern "C" void run_cuda_kernel(struct svm_parameter param)
 
 		cutilSafeCall(cudaMemcpy(temp,h_data_temp,size_of_data,cudaMemcpyHostToDevice));
 		d_data[i] = temp;
+		free(h_data_temp);
 	}
 
 	float *d_dot_xi_x, *d_dot_yi_x;
 	float *d_dot_xi_y, *d_dot_yi_y;
-	float *d_distance;
+	float *d_distance, *d_rho;
 	float *d_dot_same[2];
 
 	cutilSafeCall(cudaMalloc((void**) &d_distance, sizeof(float)));
+	cutilSafeCall(cudaMalloc((void**) &d_rho, sizeof(float)));
 	cutilSafeCall(cudaMalloc((void**) &d_dot_xi_x, prob[0].l * sizeof(float)));
 	cutilSafeCall(cudaMalloc((void**) &d_dot_yi_x, prob[0].l * sizeof(float)));
 	cutilSafeCall(cudaMalloc((void**) &d_dot_same[0], prob[0].l * sizeof(float)));
@@ -230,7 +233,7 @@ extern "C" void run_cuda_kernel(struct svm_parameter param)
 	cuda_kernel_init_pointer<<<1,1>>>(d_data[0], d_data[1], max_index, prob[0].l, prob[1].l,
 		d_weights[0], d_weights[1],
 		d_dot_xi_x, d_dot_yi_x, d_dot_xi_y, d_dot_yi_y, 
-		d_dot_same[0], d_dot_same[1], d_distance, param);
+		d_dot_same[0], d_dot_same[1], d_distance, d_rho, param);
 
 	cuda_cache_init<<<1,1>>>(nr_of_cache_entries, nr_of_elements,
 		d_look_up_table, d_reverse_look_up_table, d_circular_array, d_data_cache);
@@ -286,6 +289,8 @@ extern "C" void run_cuda_kernel(struct svm_parameter param)
 		float h_distance[1];
 		cutilSafeCall(cudaMemcpy( &h_distance, d_distance, sizeof(float), cudaMemcpyDeviceToHost));
 
+		cutilSafeCall(cudaMemcpy( &h_rho, d_rho, sizeof(float), cudaMemcpyDeviceToHost));
+
 		cudaThreadSynchronize();
 		// check if kernel execution generated and error
 		cutilCheckMsg("Kernel execution failed");
@@ -306,6 +311,7 @@ extern "C" void run_cuda_kernel(struct svm_parameter param)
 		if( param.verbosity >= 1 )
 		{
 			printf("distance = %e " , *h_distance);
+			printf("rho = %e " , *h_rho);
 			printf("adg = %e " , adg);
 			printf("rdg = %e \n", rdg);
 		}
@@ -340,5 +346,7 @@ extern "C" void run_cuda_kernel(struct svm_parameter param)
 	//{
 	//  printf(" %d : %f \n", i, h_temp[i]);
 	//}
-
+	*rho = *h_rho;
+	weights[0] = h_weights[0];
+	weights[1] = h_weights[1];
 }

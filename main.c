@@ -5,7 +5,7 @@
 #include "globals.h"
 #include "readsvm.h"
 
-extern void run_cuda_kernel();
+extern void run_cuda_kernel(struct svm_parameter param, float** weights, float *rho);
 struct svm_parameter param;		// set by parse_command_line
 
 void exit_with_help()
@@ -119,7 +119,45 @@ int main (int argc, char ** argv)
 		printf(" number of vectors in class 1 = %d and in class 2 = %d \n", prob[0].l, prob[1].l);
 	}
 
-	run_cuda_kernel(param);
+	float* weights[2];
+	float rho;
+	run_cuda_kernel(param, weights,&rho);
 
+    struct svm_model model;
+    model.param = param;
+
+    model.weights[0] = weights[0];
+    model.weights[1] = weights[1];
+
+    model.SV[0] = prob[0].x;
+    model.SV[1] = prob[1].x;
+
+    model.label[0] = 1;
+    model.label[1] = -1; //todo: richtig machen. (namen aus daen file lesen?)
+
+    // <q, p-q> - <p-q, p-q>/2
+    model.rho = rho;
+
+    model.l=0;
+    model.nSV[0]=0;
+    model.nSV[1]=0;
+
+    int i;
+    int j;
+    for(j=0;j<2;j++)
+    for(i=0;i<prob[j].l;i++)
+    {
+        if(model.weights[j][i] != 0.0)
+        {
+            model.l++;
+            model.nSV[j]++;
+        }
+    }
+
+    svm_save_model(model_filename, &model);
+	
+	free(model.weights[0]);
+	free(model.weights[1]);
+	
 	return 0;
 }

@@ -52,7 +52,7 @@ struct svm_model
 
 	int label[2];		// label of each class (label[k])
 	int nSV[2];		// number of SVs for each class (nSV[k])
-	double* weights[2]; //gewichte
+	float* weights[2]; //gewichte
 	struct svm_node **SV[2]; //daten
 
 				// nSV[0] + nSV[1] + ... + nSV[k-1] = l
@@ -64,8 +64,6 @@ struct svm_model
 struct svm_problem prob[2];		// set by read_problem
 
 int max_index;
-
-double rho;
 
 struct svm_node *x_space[2];
 int elements[2]; //todo: globals aufteilen in datenstrukturen und daten
