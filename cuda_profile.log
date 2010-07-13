@@ -1,6 +1,0 @@
-# CUDA_PROFILE_LOG_VERSION 1.4
-# CUDA_DEVICE 0 GeForce 8600 GT
-method,gputime,cputime,occupancy,gld_coherent,gld_incoherent,gst_coherent,gst_incoherent
-method=[ memcopy ] gputime=[ 4.800 ] cputime=[ 14.000 ] 
-method=[ memcopy ] gputime=[ 4.160 ] cputime=[ 13.000 ] 
-method=[ memcopy ] gputime=[ 4.192 ] cputime=[ 13.000 ] 
