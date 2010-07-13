@@ -119,9 +119,7 @@ __device__ float kernel(int set1, int element1, int set2, int element2)
 		case POLY:
 			return kernel_poly(set1, element1, set2, element2);
 		case RBF:
-			float res = kernel_rbf(set1, element1, set2, element2);
-			//printf("(%d %d - %d %d) = %f \n", set1, element1, set2, element2, res);
-			return res;
+			return kernel_rbf(set1, element1, set2, element2);
 		case SIGMOID:
 			return kernel_sigmoid(set1, element1, set2, element2);
 //		case PRECOMPUTED:
