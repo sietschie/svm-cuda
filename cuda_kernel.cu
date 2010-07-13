@@ -59,7 +59,7 @@ __device__ float kernel_linear(int set1, int element1, int set2, int element2) /
 
 	float ret = dot(px, py );
 	if(set1 == set2 && element1 == element2)
-		ret += param.C;
+		ret += 1.0/param.C;
 	return ret;
 }
 
@@ -80,7 +80,7 @@ __device__ float kernel_poly(int set1, int element1, int set2, int element2)
 
 	float ret = power(param.gamma*dot(px, py )+param.coef0,param.degree);
 	if(set1 == set2 && element1 == element2)
-		ret += param.C;
+		ret += 1.0/param.C;
 	return ret;
 }
 
@@ -96,7 +96,7 @@ __device__ float kernel_rbf(int set1, int element1, int set2, int element2)
 	float wexp = exp(wgamma);
 
 	if(set1 == set2 && element1 == element2)
-		wexp += param.C;
+		wexp += 1.0/param.C;
 	return wexp;
 
 }
@@ -108,7 +108,7 @@ __device__ float kernel_sigmoid(int set1, int element1, int set2, int element2)
 
 	float ret = tanh(param.gamma*dot(px, py)+param.coef0);
 	if(set1 == set2 && element1 == element2)
-		ret += param.C;
+		ret += 1.0/param.C;
 	return ret;
 }
 
