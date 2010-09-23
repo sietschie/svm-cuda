@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #include "svm.h"
-#include "globals.h"
+#include "../common/globals.h"
 #include "kernel.h"
 #include "cache.h"
 

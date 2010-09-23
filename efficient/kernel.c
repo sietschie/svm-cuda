@@ -1,5 +1,5 @@
 #include <math.h>
-#include "globals.h"
+#include "../common/globals.h"
 #include "kernel.h"
 
 //static double C = 5.5;

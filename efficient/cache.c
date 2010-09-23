@@ -2,7 +2,7 @@
 #include <string.h>
 #include "cache.h"
 #include "kernel.h"
-#include "globals.h"
+#include "../common/globals.h"
 
 // cache anfang
 

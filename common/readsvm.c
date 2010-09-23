@@ -3,7 +3,7 @@
 #include <errno.h>
 #include <string.h>
 #include <ctype.h>
-#include "readsvm.h"
+#include "../common/readsvm.h"
 #include "globals.h"
 
 #define Malloc(type,n) (type *)malloc((n)*sizeof(type))

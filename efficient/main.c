@@ -6,7 +6,7 @@
 
 #include <math.h>
 
-#include "readsvm.h"
+#include "../common/readsvm.h"
 //#define INFINITY	__builtin_inf() // todo: get rid of that
 
 
