@@ -5,7 +5,7 @@
 #include "svm.h"
 
 #include <math.h>
-
+#include "globals.h"
 #include "../common/readsvm.h"
 //#define INFINITY	__builtin_inf() // todo: get rid of that
 
@@ -285,7 +285,7 @@ int main (int argc, char ** argv)
 //    else
 //        filename = argv[1];
 
-    read_problem(input_filename);
+    read_problem(input_filename, prob, &param, &max_index);
 
     if(param.gamma == 0 && max_index > 0)
 		param.gamma = 1.0/max_index;
@@ -335,7 +335,7 @@ int main (int argc, char ** argv)
         }
     }
 
-    svm_save_model(model_filename, &model);
+    svm_save_model(model_filename, &model, prob);
 
     param.C = 1000000000000000.0; //TODO
 

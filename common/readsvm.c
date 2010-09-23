@@ -41,7 +41,10 @@ static char* readline(FILE *input)
 	return line;
 }
 
-void read_problem(const char *filename)
+void read_problem(const char *filename, 
+				struct svm_problem *prob, 
+				struct svm_parameter *param, 
+				int *max_index)
 {
 	int elements[2], inst_max_index, i[2], j[2];
 	FILE *fp = fopen(filename,"r");
@@ -140,8 +143,8 @@ void read_problem(const char *filename)
 			++j[current_set];
 		}
 
-		if(inst_max_index > max_index)
-			max_index = inst_max_index;
+		if(inst_max_index > *max_index)
+			*max_index = inst_max_index;
 		x_space[current_set][j[current_set]++].index = -1;
 		i[current_set]++;
 	}
@@ -160,7 +163,9 @@ const char *kernel_type_table[]=
 };
 
 
-int svm_save_model(const char *model_file_name, const struct svm_model* model)
+int svm_save_model(const char *model_file_name, 
+				const struct svm_model* model,
+				struct svm_problem *prob)
 {
 	FILE *fp = fopen(model_file_name,"w");
 	if(fp==NULL) return -1;

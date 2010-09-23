@@ -2,8 +2,7 @@
 #include <string.h>
 #include "cache.h"
 #include "kernel.h"
-#include "../common/globals.h"
-
+#include "globals.h"
 // cache anfang
 
 int nr_of_cache_entries;

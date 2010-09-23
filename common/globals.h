@@ -1,5 +1,5 @@
-#ifndef GLOBALS_H_INCLUDED
-#define GLOBALS_H_INCLUDED
+#ifndef COMMON_GLOBALS_H_INCLUDED
+#define COMMON_GLOBALS_H_INCLUDED
 
 enum { C_SVC, NU_SVC, ONE_CLASS, EPSILON_SVR, NU_SVR };	/* svm_type */
 enum { LINEAR, POLY, RBF, SIGMOID }; //, PRECOMPUTED }; /* kernel_type */
@@ -62,14 +62,4 @@ struct svm_model
 				// 0 if svm_model is created by svm_train
 };
 
-struct svm_problem prob[2];		// set by read_problem
-
-int max_index;
-
-
-struct svm_parameter param;		// set by parse_command_line
-
-
-double rho;
-
-#endif // GLOBALS_H_INCLUDED
+#endif // COMMON_GLOBALS_H_INCLUDED
