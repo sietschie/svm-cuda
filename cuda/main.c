@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "globals.h"
-#include "readsvm.h"
+#include "../common/readsvm.h"
 
 extern void run_cuda_kernel(struct svm_parameter param, float** weights, float *rho);
 struct svm_parameter param;		// set by parse_command_line

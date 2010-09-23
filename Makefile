@@ -1,2 +1,7 @@
-all:
-	nvcc main.c readsvm.c cuda_main.cu
+# Makefile im Top-Level-Verzeichnis
+
+DIRS = cuda common
+
+compile:
+	for i in $(DIRS); do make -C $$i; done;
+
