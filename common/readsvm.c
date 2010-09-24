@@ -14,7 +14,7 @@ static int max_line_len;
 struct svm_node *x_space[2];
 
 // int max_index = 0; //todo: checken ob das so immernoch wie geplant funktioniert, oder ueberhaupt gebraucht wird.
-int max_index = 0;
+//int max_index = 0;
 
 void exit_input_error(int line_num)
 {
