@@ -13,7 +13,11 @@ static char *line = NULL;
 static int max_line_len;
 struct svm_node *x_space[2];
 
+<<<<<<< HEAD
 // int max_index = 0; //todo: checken ob das so immernoch wie geplant funktioniert, oder ueberhaupt gebraucht wird.
+=======
+int max_index = 0;
+>>>>>>> 461387651a0af72aac021b2b407c049df38eadd1
 
 void exit_input_error(int line_num)
 {
@@ -324,9 +328,15 @@ struct svm_model *svm_load_model(const char *model_file_name)
 		else if(strcmp(cmd,"degree")==0)
 			fscanf(fp,"%d",&param.degree);
 		else if(strcmp(cmd,"gamma")==0)
+#ifdef USE_FLOAT
 			fscanf(fp,"%f",&param.gamma);
 		else if(strcmp(cmd,"coef0")==0)
 			fscanf(fp,"%f",&param.coef0);
+#else
+			fscanf(fp,"%lf",&param.gamma);
+		else if(strcmp(cmd,"coef0")==0)
+			fscanf(fp,"%lf",&param.coef0);
+#endif
 //		else if(strcmp(cmd,"nr_class")==0)
 //			fscanf(fp,"%d",&model->nr_class);
 //		else if(strcmp(cmd,"total_sv")==0)
@@ -392,7 +402,8 @@ struct svm_model *svm_load_model(const char *model_file_name)
 
 	int i;
 	for(i=0;i<2;i++) {
-		model->weights[i] = Malloc(float,model->nSV[i]);
+		//model->weights[i] = Malloc(float,model->nSV[i]);
+		model->weights[i] = Malloc(double,model->nSV[i]);
         model->SV[i] = Malloc(struct svm_node*,model->nSV[i]);
 	}
 
@@ -446,3 +457,4 @@ struct svm_model *svm_load_model(const char *model_file_name)
 	//model->free_sv = 1;	// XXX
 	return model;
 }
+

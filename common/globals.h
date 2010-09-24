@@ -22,13 +22,20 @@ struct svm_parameter
 {
 	int kernel_type;
 	int degree;	/* for poly */
+#ifdef USE_FLOAT
 	float gamma;	/* for poly/rbf/sigmoid */
 	float coef0;	/* for poly/sigmoid */
+	float C;	/* for C_SVC, EPSILON_SVR and NU_SVR */
+#else
+	double gamma;	/* for poly/rbf/sigmoid */
+	double coef0;	/* for poly/sigmoid */
+	double C;	/* for C_SVC, EPSILON_SVR and NU_SVR */
+#endif
 
 	/* these are for training only */
 	int cache_size; /* in MB */
 	double eps;	/* stopping criteria */
-	float C;	/* for C_SVC, EPSILON_SVR and NU_SVR */
+
 	int verbosity;
 	int maximum_iterations;
 
