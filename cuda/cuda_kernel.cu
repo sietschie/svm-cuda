@@ -1,7 +1,7 @@
 #ifndef _CUDA_KERNEL_H_
 #define _CUDA_KERNEL_H_
 
-#include "globals.h"
+#include "../common/globals.h"
 
 __device__ float* g_data[2];
 __device__ int maximum_index;
