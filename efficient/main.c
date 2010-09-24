@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "kernel.h"
 #include "svm.h"
 
@@ -300,7 +301,15 @@ int main (int argc, char ** argv)
     x_weights = (double *) malloc(prob[0].l * sizeof(double));
     y_weights = (double *) malloc(prob[1].l * sizeof(double));
 
+	clock_t start, finish;
+	start = clock();
+
     compute_weights(x_weights, y_weights);
+
+	finish = clock();
+
+	double time = ((double)(finish - start))/CLOCKS_PER_SEC;
+	printf("time: %f \n", time);
 
     struct svm_model model;
     model.param = param;
@@ -337,7 +346,7 @@ int main (int argc, char ** argv)
 
     svm_save_model(model_filename, &model, prob);
 
-    param.C = 1000000000000000.0; //TODO
+/*    param.C = 1000000000000000.0; //TODO
 
     double* w = compute_w( max_index, x_weights, y_weights );
     double b = ( findmin(0,w, x_weights, y_weights) + findmax(1,w, x_weights, y_weights) ) / 2.0;

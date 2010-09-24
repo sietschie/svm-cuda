@@ -6,6 +6,7 @@
  **/
 
 #include <stdio.h>
+#include <time.h>
 #include <cuda_runtime.h>
 
 #include "globals.h"
@@ -228,6 +229,10 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	float** weights, flo
 	cuda_cache_init<<<1,1>>>(nr_of_cache_entries, nr_of_elements,
 		d_look_up_table, d_reverse_look_up_table, d_circular_array, d_data_cache);
 
+
+	clock_t start, finish;
+	start = clock();
+
 	cudaThreadSynchronize();
 	cuda_kernel_init_kernel<<<nblocks, nthreads>>>();
 	cudaThreadSynchronize();
@@ -310,6 +315,11 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	float** weights, flo
 		if( rdg < param.eps )
 			break;
 	}
+
+	finish = clock();
+
+	double time = ((double)(finish - start))/CLOCKS_PER_SEC;
+	printf("time: %f \n", time);
 
 	// copy results back and print them
 
