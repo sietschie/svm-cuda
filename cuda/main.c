@@ -113,7 +113,8 @@ int main (int argc, char ** argv)
 
     parse_command_line(argc, argv, input_filename, model_filename);
 
-	read_problem(input_filename);
+    read_problem(input_filename, prob, &param, &max_index);
+
     if(param.gamma == 0 && max_index > 0)
 		param.gamma = 1.0/max_index;
 
@@ -158,7 +159,7 @@ int main (int argc, char ** argv)
         }
     }
 
-    svm_save_model(model_filename, &model);
+    svm_save_model(model_filename, &model, prob);
 	
 	free(model.weights[0]);
 	free(model.weights[1]);
