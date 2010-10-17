@@ -74,17 +74,17 @@ K'(x,y) = K(x,y) + \frac{1}{C} \delta_{x,y}.
 \subsection{Kernel}
 Eine weitere Möglichkeit nicht linear separierbare Daten dennoch zu trennen stellen die Kernelfunktionen dar.
 Daten, die im Ursprungsraum nicht linear separierbar sind, können dies in einem höherdimensionalen Raum durchaus sein. $\varphi : \mathcal R^d \rightarrow \mathcal R^{d'}$
-Aber anstatt den Hochdimensionalen Raum explizit zu berechnen, verwendet man Kernel-Funktionen.
+Aber anstatt den hochdimensionalen Raum explizit zu berechnen, verwendet man Kernel-Funktionen.
  
 Eine Kernel Funktion ist eine positive semi-definite Funktion $k: \mathcal R^d \times \mathcal R^d \rightarrow \mathcal R$.
 Das Mercer Theorem sagt nun, dass es für eine solche Funktion einen hochdimensionalen Raum $\varphi$ gibt, für den gilt $K(x,y) = \langle \varphi(x), \varphi(y) \rangle$.
-Verwendet man bei der SVM nun die Kernelfunktion zum Berechnen der Skalarprodukte, kann man die lineare Trennung im Hochdimensionalen Raum berechnen, ohne den hochdimensionalen Raum jemals explizit zu benutzen.  Lediglich die Kernelfunktion muss ausgewertet werden.
+Verwendet man bei der SVM nun die Kernelfunktion zum Berechnen der Skalarprodukte, kann man die lineare Trennung im hochdimensionalen Raum berechnen, ohne den hochdimensionalen Raum jemals explizit zu benutzen.  Lediglich die Kernelfunktion muss ausgewertet werden.
 
 \subsection{verwendeter Algorithmus}
-TODO: war eigentlich nur ein platzhaltersatz
-
-Grundalgorithmus von Gilbert~\cite{eggilbert}, hier Anwendung abwechselnd auf 2 Polytope. Ausgedacht von Gärtner und Jaggi~\cite{jaggi}.
-Der Algorithmus funktioniert nach folgendem Prinzip:
+Der Grundalgorithmus wurde von Gilbert~\cite{eggilbert} entwickelt. 
+Hier wird er abwechselnd auf 2 Polytope angewendet. 
+Diese Idee stammt von Gärtner und Jaggi~\cite{jaggi}.
+Der Algorithmus funktioniert nach dem folgenden Prinzip:
 \begin{itemize}
 \item Berechne:
 \begin{align}
@@ -137,11 +137,11 @@ So kann sichergestellt werden, dass ein Zwischenergebnis eines Threads für alle
 Eine Kommunikation zwischen Blöcken ist nicht vorgesehen.
 Dies wird damit begründet, dass es für viele parallele Prozessoren nur schwer zu implementieren sei und dass dies außerdem die maximale Anzahl an Blocks wegen der Gefahr eines Deadlocks begrenzen würde~\cite{parallelreduction}.
 
-Eine Kommunikaiotn zwischen den Blöcken ist für den Algorithmus aber nötig, da immer wieder Zwischenergebnisse (Beispielsweise die gefunden Maximas) allen Threads zugänglich gemacht werden müssen.
+Eine Kommunikation zwischen den Blöcken ist für den Algorithmus aber nötig, da immer wieder Zwischenergebnisse (Beispielsweise die gefunden Maximas) allen Threads zugänglich gemacht werden müssen.
 Die Threads schreiben die Zwischenergebnisse in den globalen Speicher. Der Host-Thread wartet ab, bis der Kernel vollständig beendet ist und startet anschließend einen neuen Kernel, dessen Threads jetzt alle auf die Zwischenergebnisse zugreifen können.
 %%unterteilung in viele kleine kernel
 
-Es gibt auch andere Algorithmen zur Synchrnisierung der Blöcke. Diese werden aber nicht offiziell von CUDA unterstützt~\cite{interblockgpusync}.
+Es gibt auch andere Algorithmen zur Synchronisierung der Blöcke. Diese werden aber nicht offiziell von CUDA unterstützt~\cite{interblockgpusync}.
 %http://eprints.cs.vt.edu/archive/00001087/01/TR_GPU_synchronization.pdf .
 Die Grundlegende Idee ist, dass jeder Block zum Beginn der Synchronisierung eine Variable im globalen Speicher aktualisiert und anschließend den Wert dieser Variable in einer While-Schleife solange abfragt, bis alle Threads diese Variable aktualisiert haben.
 \subsection{Experimente}
