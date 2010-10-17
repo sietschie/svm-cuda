@@ -74,7 +74,7 @@ void update_xi_x(double* dot_xi_x, int p, int p2, int max_p_index, double lambda
     //printf("\n");
 }
 
-void compute_weights(double *x_weights, double* y_weights)
+int compute_weights(double *x_weights, double* y_weights)
 {
         // init cache
     init(param.cache_size, prob[0].l + prob[1].l);
@@ -244,6 +244,7 @@ void compute_weights(double *x_weights, double* y_weights)
         rho = dot_xi_yi - dot_xi_xi - (dot_xi_xi + dot_yi_yi - 2 * dot_xi_yi)/2;
         //printf("xi_xi = %f   yi_yi = %f   xi_yi = %f \n", dot_xi_xi, dot_yi_yi, dot_xi_yi);
 		if( rdg < param.eps )
-			break;
+			return j;
     }
+	return j;
 }

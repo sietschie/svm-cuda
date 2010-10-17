@@ -244,7 +244,8 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	float** weights, flo
 	cudaThreadSynchronize();
 	// check if kernel execution generated and error
 	cutilCheckMsg("Kernel execution failed");
-	for(int i = 0; i<param.maximum_iterations; i++)
+	
+	for(i = 0; i<param.maximum_iterations; i++)
 	{
 		cuda_kernel_lambda<<<1, 1>>>();
 		cudaThreadSynchronize();
@@ -319,7 +320,7 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	float** weights, flo
 	finish = clock();
 
 	double time = ((double)(finish - start))/CLOCKS_PER_SEC;
-	printf("time: %f \n", time);
+	printf("time: %f, iterations: %d \n", time, i);
 
 	// copy results back and print them
 
