@@ -1,0 +1,162 @@
+\documentclass{scrartcl}
+\usepackage{amsmath}
+\usepackage[utf8]{inputenc}
+\usepackage{url}
+
+\begin{document}
+\section{Theorie}
+\subsection{Hard Margin SVM}
+%so formatieren http://jcnts.wordpress.com/2009/11/11/formatting-optimization-problems-with-latex/
+Ziel einer SVM ist es eine Hyperebene zu finden, die zwei Mengen trennt.
+Je nach dem auf welcher Seite der Hyperebene sich neue Punkte befinden, können diese dann der entsprechenden Klasse zugeordnet werden.
+%Anschließend können neue Punkte durch ihre Lage zur Hyperebene klassifiziert werden.
+Es wird die Hyperebene gesucht, bei der ein möglichst großer Bereich um die Hyperebene herum frei von Objekten bleibt.
+Eine Hyperebene wird definiert durch die Normale $w \in \mathcal R^d$ und den Offset $b \in \mathcal R$.
+Bei der Hard Margin SVM geht man davon aus, dass die Menge linear separierbar sind.
+Für einen positiven Punkt $x^+$ und einen negativen Punkt $x^-$ soll folgendes gelten:
+%Eine Hyperebene die die beiden Mengen $X$ und $Y$, die sogenannten Trainingsdaten, trennt muss nun folgende Eigenschaft erfüllen:
+\begin{align}
+\langle w , x^+ \rangle + b &\ge 1 \\
+\langle w , x^- \rangle + b &\le -1 
+\end{align}
+
+%Die Hyperebenen $<w,x^+> + b = 1$ und $<w,x^-> + b = -1$ sind die Hyperebenen mit dem maximalen Abstand, die gerade eben noch die beiden Mengen trennen.
+Um die gesuchte ebene $\langle w,x \rangle + b = 0$ mit dem maximalen Abstand zu finden, muss dieser maximiert werden.
+Durch eine einfache geometrische Überlegung lässt sich zeigen, dass dieser $\frac{1}{\|w\|_2}$ beträgt. Das Maximieren dieses Abstandes entspricht der Minimierung von $\langle w,w \rangle$.
+Es muss also, gegeben einer linear separierbaren Trainingsmenge $S = \lbrace(x_1, y_1),\ldots ,(x_l, y_l)\rbrace$, folgendes Optimierungsproblem gelöst werden:
+%Um nun die Hyperebene mit zu finden, die den maximalen Abstand zu beiden Mengen hat, wird folgende Formal optimiert:
+\begin{align}
+& \underset{b,w}{\text{minimiere}}& &<w,w> \\
+& \text{so dass } & & y_i \left( \langle w , x_i \rangle + b \right) \geq 1 \nonumber \\
+& & &i = 1, \ldots, l. \nonumber
+\end{align}
+
+Meistens wird jedoch das duale Problem gelöst:
+\begin{align}
+&\underset{\alpha}{\text{maximiere}} && \sum_{i=1}^n \alpha_i - \frac{1}{2} \sum_{i,j}^n \alpha_i \alpha_j y_i y_j \langle p_i, p_j \rangle  \\
+&\text{so dass } && \sum_{i=1}^n \alpha_i y_i = 0 \\
+&&&  \alpha_i \geq 0, i = 1, \ldots  ,l.
+\end{align}
+
+Die Ursprünglich gesuchten Parameter der Hyperebene können mit folgenden Formeln berechnet werden:
+\begin{align}
+w &= \sum_{i=1}^n \alpha_i y_i p_i \\
+b &= \frac{\min_{y_i = 1}(\langle w,x_i \rangle ) + \max_{y_i = -1}(\langle w,x_i \rangle)}{2}
+\end{align}
+
+\subsection{Soft Margin SVM}
+Eine Möglichkeit um auch Daten zu verarbeiten, die nicht perfekt linear getrennt werden können, ist die Soft Margin SVM.
+Es werden Punkte auf der falschen Seite der Hyperebene erlaubt.
+Die Entfernung dieser Punkte von der Hyperebene geht aber als Bestrafung in die Optimierung mit ein.
+\begin{equation}
+y_i \langle w,x_i\rangle + b \geq 1
+\end{equation}
+wird zu
+\begin{equation}
+y_i \langle w,x_i\rangle + b \geq 1 - \xi_i
+\end{equation}
+Bei der $\ell_2$-Soft-Margin SVM wird zusätzlich der Term $C \cdot \sum_i \xi^2$ minimiert. Das Optimierungsproblem sieht also folgendermaßen aus:
+\begin{align}
+&\underset{b,w}{\text{minimiere}} &&\langle w,w \rangle + C \sum_{i=1}^l \xi^2\\
+&\text{so dass } && y_i \langle w \cdot x \rangle + b \geq 1 - \xi_i , i = 1, \ldots , l. \nonumber
+\end{align}
+Das entsprechende duale Problem sieht folgendermaßen aus:
+\begin{align}
+&\underset{\alpha}{maximiere} && \sum_{i=1}^n \alpha_i - \frac{1}{2} \sum_{i,j}^n \alpha_i \alpha_j y_i y_j \left( \langle x_i, x_j \rangle + \frac{1}{C} \delta_{i,j}\right)  \\
+&\text{so dass } && \sum_{i=1}^n \alpha_i y_i = 0 \\
+&&&  \alpha_i \geq 0, i = 1, \ldots  ,l.
+\end{align}
+Man kann zeigen, dass die $\ell_2$-Soft-Margin SVM der normalen SVM mit einem modifiziertem Kernel entspricht:
+\begin{align}
+K'(x,y) = K(x,y) + \frac{1}{C} \delta_{x,y}.
+\end{align}
+
+\subsection{Kernel}
+Eine weitere Möglichkeit nicht linear separierbare Daten dennoch zu trennen stellen die Kernelfunktionen dar.
+Daten, die im Ursprungsraum nicht linear separierbar sind, können dies in einem höherdimensionalen Raum durchaus sein. $\varphi : \mathcal R^d \rightarrow \mathcal R^{d'}$
+Aber anstatt den hochdimensionalen Raum explizit zu berechnen, verwendet man Kernel-Funktionen.
+ 
+Eine Kernel Funktion ist eine positive semi-definite Funktion $k: \mathcal R^d \times \mathcal R^d \rightarrow \mathcal R$.
+Das Mercer Theorem sagt nun, dass es für eine solche Funktion einen hochdimensionalen Raum $\varphi$ gibt, für den gilt $K(x,y) = \langle \varphi(x), \varphi(y) \rangle$.
+Verwendet man bei der SVM nun die Kernelfunktion zum Berechnen der Skalarprodukte, kann man die lineare Trennung im hochdimensionalen Raum berechnen, ohne den hochdimensionalen Raum jemals explizit zu benutzen.  Lediglich die Kernelfunktion muss ausgewertet werden.
+
+\subsection{verwendeter Algorithmus}
+Der Grundalgorithmus wurde von Gilbert~\cite{eggilbert} entwickelt. 
+Hier wird er abwechselnd auf 2 Polytope angewendet. 
+Diese Idee stammt von Gärtner und Jaggi~\cite{jaggi}.
+Der Algorithmus funktioniert nach dem folgenden Prinzip:
+\begin{itemize}
+\item Berechne:
+\begin{align}
+p_{max} &=\arg\max_{p \in P} \langle p - p^i, q^i - p^i \rangle \\
+q_{max} &=\arg\max_{q \in Q} \langle q - q^i, p^i - q^i \rangle
+\end{align}
+\item Falls $ \langle p_{max} - p^i, q^i - p^i \rangle \geq \langle q_{max} - q^i, p^i - q^i \rangle$:
+\begin{align}
+\lambda&= \frac{\langle q^i-p_{max},p^i-p_{max}\rangle}{\langle p^i-p_{max},p^i-p_{max}\rangle}\\  
+p^{i+1} &= \lambda p^i + (1 - \lambda) p_{max}
+\end{align}
+\item Algorithmus wiederholen, falls noch keine $\epsilon$-Approximation.
+\end{itemize}
+Zur Berechnung werden die Gewichtvektoren verwendet:
+\begin{align}
+p^i = \sum_{p \in P} w^i p
+\end{align}
+Die Skalarprodukte werden nicht in jedem Schritt komplett neu, sondern mit den vorherigen Ergebnissen in einem Update-Schritt effizienter berechnet.
+Beispiel:
+\begin{align}
+%\langle p - p^i, q^i - p^i \rangle &= \langle p - (\lambda p^{i-1} + (1-\lambda) p_{max}), q^{i-1} - (\lambda p^{i-1} + (1-\lambda) p_{max}) \rangle
+\langle p , p^i \rangle &= \langle p , \lambda p^{i-1} + (1-\lambda) p_{max} \rangle \\
+&= \langle p, \lambda p^{i-1} \rangle + \langle p, (1-\lambda) p_{max} \rangle \\
+&= \lambda \langle p, p^{i-1} \rangle + (1-\lambda) \langle p, p_{max} \rangle \\
+\end{align}
+
+\section{Praxis}
+\subsection{Implementierung mit CUDA}
+\subsubsection{Parallel Reduction}
+Nach der ersten naiven Implementierung des Algorithmus benötigte das serielle Suchen des Maximums etwa 90\% der gesamten Rechenzeit. %TODO: Zahl verifizieren
+Um diesen Vorgang zu parallelisieren verwendete ich die parallele Reduktion~\cite{parallelreduction}.
+Dabei werden parallel jeweils zwei Elemente miteinander verglichen.
+Im nächsten Schritt werden die Ergebnisse wieder miteinander verglichen, bis nur noch ein Element übrig bleibt.
+Damit dieser Algorithmus auch effizient auf der CUDA-Hardware ablaufen kann, müssen aber noch einige Eigenheiten des Systems berücksichtigt werden.
+Dazu gehört unter anderem das verhindern von divergierenden Threads innerhalb eines Warps und ein anpassen der Adressierung um Bank-Konflikte zu vermeiden.
+Desweiteren tragen Loop-Unrolling und C++-Templates dazu bei, nicht benötigte Instruktionen aus den Kernel zu entfernen.
+Mit diesen Techniken konnte die Geschwinidgkeit des einfachen parallelen Algorithmus um den Faktor 20 gesteigert werden.
+%der spezielle max-algorithmus: parallele reduktion
+%http://developer.download.nvidia.com/compute/cuda/1_1/Website/projects/reduction/doc/reduction.pdf
+%TODO: Bilder von den Diagrammen?
+\subsubsection{interblock communication}
+In CUDA werden Threads in Blocks und Grids eingeteilt.
+Die Blöcke werden dann Streaming Multiprocessors (SM) zugeteilt.
+Ein Block läuft immer auf genau einem SM.
+Die Threads in einem Block werden dann in Gruppen von 16 (einem Warp) parallel ausgeführt.
+Die Synchronisierung innerhalb eines Blocks ist mit der Funktion "\_\_syncthreads()" möglich.
+Ein Thread wartet nach Aufruf diese Funktion, bis alle anderen Threads auch diesen Aufruf erreicht haben.
+So kann sichergestellt werden, dass ein Zwischenergebnis eines Threads für alle anderen Threads sichtbar ist.
+
+Eine Kommunikation zwischen Blöcken ist nicht vorgesehen.
+Dies wird damit begründet, dass es für viele parallele Prozessoren nur schwer zu implementieren sei und dass dies außerdem die maximale Anzahl an Blocks wegen der Gefahr eines Deadlocks begrenzen würde~\cite{parallelreduction}.
+
+Eine Kommunikation zwischen den Blöcken ist für den Algorithmus aber nötig, da immer wieder Zwischenergebnisse (Beispielsweise die gefunden Maximas) allen Threads zugänglich gemacht werden müssen.
+Die Threads schreiben die Zwischenergebnisse in den globalen Speicher. Der Host-Thread wartet ab, bis der Kernel vollständig beendet ist und startet anschließend einen neuen Kernel, dessen Threads jetzt alle auf die Zwischenergebnisse zugreifen können.
+%%unterteilung in viele kleine kernel
+
+Es gibt auch andere Algorithmen zur Synchronisierung der Blöcke. Diese werden aber nicht offiziell von CUDA unterstützt~\cite{interblockgpusync}.
+%http://eprints.cs.vt.edu/archive/00001087/01/TR_GPU_synchronization.pdf .
+Die Grundlegende Idee ist, dass jeder Block zum Beginn der Synchronisierung eine Variable im globalen Speicher aktualisiert und anschließend den Wert dieser Variable in einer While-Schleife solange abfragt, bis alle Threads diese Variable aktualisiert haben.
+\subsection{Experimente}
+
+\pagebreak
+\nocite{parallelreduction}
+\nocite{interblockgpusync}
+\nocite{introductiontosvm}
+\nocite{diplomarbeit}
+\nocite{libsvm}
+\nocite{cudaprogrammingguide}
+
+
+\bibliography{doc}{}
+\bibliographystyle{plain}
+
+\end{document}
+

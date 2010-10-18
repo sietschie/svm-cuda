@@ -304,12 +304,12 @@ int main (int argc, char ** argv)
 	clock_t start, finish;
 	start = clock();
 
-    compute_weights(x_weights, y_weights);
+    int iterations = compute_weights(x_weights, y_weights);
 
 	finish = clock();
 
 	double time = ((double)(finish - start))/CLOCKS_PER_SEC;
-	printf("time: %f \n", time);
+	printf("time: %f, iterations: %d \n", time, iterations);
 
     struct svm_model model;
     model.param = param;
