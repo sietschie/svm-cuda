@@ -18,11 +18,11 @@ const int maxNumThreadsPerBlock = 128;
 
 // variables for reduction function
 int reduction_length[2];
-float *d_reduction_value[2];
+double *d_reduction_value[2];
 int *d_reduction_index[2];
 int reduction_nthreads[2];
 
-void reduction_startKernel(int dimGrid, int dimBlock, int* d_reduction_index, float* d_reduction_value, int set, int first, int data_size1)
+void reduction_startKernel(int dimGrid, int dimBlock, int* d_reduction_index, double* d_reduction_value, int set, int first, int data_size1)
 {
 	switch (dimBlock)
 	{
@@ -66,7 +66,7 @@ void reduction_init()
 			reduction_nthreads[i] /= 2;
 		}
 
-		cutilSafeCall(cudaMalloc((void**) &d_reduction_value[i], reduction_length[i] * sizeof(float)));
+		cutilSafeCall(cudaMalloc((void**) &d_reduction_value[i], reduction_length[i] * sizeof(double)));
 		cutilSafeCall(cudaMalloc((void**) &d_reduction_index[i], reduction_length[i] * sizeof(int)));
 	}
 }
@@ -129,7 +129,7 @@ void reduction_findMaximum()
  *
  * @todo more work that needs to be done
  */
-extern "C" void run_cuda_kernel(struct svm_parameter param,	float** weights, float *rho)
+extern "C" void run_cuda_kernel(struct svm_parameter param,	double** weights, double *rho)
 {
 	int   nblocks, nthreads;	 //, nsize, n;
 
@@ -142,25 +142,25 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	float** weights, flo
 
 	// allocate memory for array
 
-	float* d_data[2];
-	float* d_weights[2];
-	float* h_weights[2];
-	float h_rho[1];
+	double* d_data[2];
+	double* d_weights[2];
+	double* h_weights[2];
+	double h_rho[1];
 
 	int i;
 	for(i=0;i<2;i++)
 	{
-		int size_of_data = sizeof(float) * prob[i].l * max_index;
+		int size_of_data = sizeof(double) * prob[i].l * max_index;
 
-		float* temp;
-		float *h_data_temp =  (float*) malloc(size_of_data);
+		double* temp;
+		double *h_data_temp =  (double*) malloc(size_of_data);
 		cutilSafeCall(cudaMalloc((void **)& temp, size_of_data ));
 
-		cutilSafeCall(cudaMalloc((void **)&d_weights[i], sizeof(float) * prob[i].l));
+		cutilSafeCall(cudaMalloc((void **)&d_weights[i], sizeof(double) * prob[i].l));
 								 //todo: speicher wieder freigeben.
-		h_weights[i] = (float*) malloc(sizeof(float) * prob[i].l);
+		h_weights[i] = (double*) malloc(sizeof(double) * prob[i].l);
 		memset( (void**) h_data_temp , 0, size_of_data);
-								 // 	 \todo : : int 0 == float 0?
+								 // 	 \todo : : int 0 == double 0?
 
 		// copy data from data structure to plain array
 		int j;
@@ -181,21 +181,21 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	float** weights, flo
 		free(h_data_temp);
 	}
 
-	float *d_dot_xi_x, *d_dot_yi_x;
-	float *d_dot_xi_y, *d_dot_yi_y;
-	float *d_distance, *d_rho;
-	float *d_dot_same[2];
+	double *d_dot_xi_x, *d_dot_yi_x;
+	double *d_dot_xi_y, *d_dot_yi_y;
+	double *d_distance, *d_rho;
+	double *d_dot_same[2];
 
-	cutilSafeCall(cudaMalloc((void**) &d_distance, sizeof(float)));
-	cutilSafeCall(cudaMalloc((void**) &d_rho, sizeof(float)));
-	cutilSafeCall(cudaMalloc((void**) &d_dot_xi_x, prob[0].l * sizeof(float)));
-	cutilSafeCall(cudaMalloc((void**) &d_dot_yi_x, prob[0].l * sizeof(float)));
-	cutilSafeCall(cudaMalloc((void**) &d_dot_same[0], prob[0].l * sizeof(float)));
+	cutilSafeCall(cudaMalloc((void**) &d_distance, sizeof(double)));
+	cutilSafeCall(cudaMalloc((void**) &d_rho, sizeof(double)));
+	cutilSafeCall(cudaMalloc((void**) &d_dot_xi_x, prob[0].l * sizeof(double)));
+	cutilSafeCall(cudaMalloc((void**) &d_dot_yi_x, prob[0].l * sizeof(double)));
+	cutilSafeCall(cudaMalloc((void**) &d_dot_same[0], prob[0].l * sizeof(double)));
 
-	cutilSafeCall(cudaMalloc((void**) &d_dot_xi_y, prob[1].l * sizeof(float)));
+	cutilSafeCall(cudaMalloc((void**) &d_dot_xi_y, prob[1].l * sizeof(double)));
 								 // 	 \todo : : prob.l durch was schoeners  ersetzen?
-	cutilSafeCall(cudaMalloc((void**) &d_dot_yi_y, prob[1].l * sizeof(float)));
-	cutilSafeCall(cudaMalloc((void**) &d_dot_same[1], prob[1].l * sizeof(float)));
+	cutilSafeCall(cudaMalloc((void**) &d_dot_yi_y, prob[1].l * sizeof(double)));
+	cutilSafeCall(cudaMalloc((void**) &d_dot_same[1], prob[1].l * sizeof(double)));
 
 	reduction_init();
 
@@ -216,8 +216,8 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	float** weights, flo
 	cutilSafeCall(cudaMalloc( (void**) &d_circular_array, sizeof(int) * nr_of_cache_entries ));
 	cutilSafeCall(cudaMemset( d_circular_array, -1, sizeof(int) * nr_of_cache_entries ));
 
-	float* d_data_cache;
-	cutilSafeCall(cudaMalloc( (void**) &d_data_cache, sizeof( float* ) * nr_of_cache_entries * nr_of_elements));
+	double* d_data_cache;
+	cutilSafeCall(cudaMalloc( (void**) &d_data_cache, sizeof( double* ) * nr_of_cache_entries * nr_of_elements));
 
 	// execute kernels
 
@@ -268,12 +268,12 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	float** weights, flo
 
 		reduction_findMaximum();
 
-		float max1[1];
-		float max2[1];
+		double max1[1];
+		double max2[1];
 		int max1_idx[1];
 		int max2_idx[1];
-		cutilSafeCall(cudaMemcpy( &max1, d_reduction_value[0], sizeof(float), cudaMemcpyDeviceToHost));
-		cutilSafeCall(cudaMemcpy( &max2, d_reduction_value[1], sizeof(float), cudaMemcpyDeviceToHost));
+		cutilSafeCall(cudaMemcpy( &max1, d_reduction_value[0], sizeof(double), cudaMemcpyDeviceToHost));
+		cutilSafeCall(cudaMemcpy( &max2, d_reduction_value[1], sizeof(double), cudaMemcpyDeviceToHost));
 		cutilSafeCall(cudaMemcpy( &max1_idx, d_reduction_index[0], sizeof(int), cudaMemcpyDeviceToHost));
 		cutilSafeCall(cudaMemcpy( &max2_idx, d_reduction_index[1], sizeof(int), cudaMemcpyDeviceToHost));
 
@@ -282,10 +282,10 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	float** weights, flo
 			printf("max[0] = %d (%f)   max[1] = %d (%f)  \n", max1_idx[0], max1[0], max2_idx[0], max2[0]);
 		}
 
-		float h_distance[1];
-		cutilSafeCall(cudaMemcpy( &h_distance, d_distance, sizeof(float), cudaMemcpyDeviceToHost));
+		double h_distance[1];
+		cutilSafeCall(cudaMemcpy( &h_distance, d_distance, sizeof(double), cudaMemcpyDeviceToHost));
 
-		cutilSafeCall(cudaMemcpy( &h_rho, d_rho, sizeof(float), cudaMemcpyDeviceToHost));
+		cutilSafeCall(cudaMemcpy( &h_rho, d_rho, sizeof(double), cudaMemcpyDeviceToHost));
 
 		cudaThreadSynchronize();
 		// check if kernel execution generated and error
@@ -324,8 +324,8 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	float** weights, flo
 
 	// copy results back and print them
 
-	cutilSafeCall(cudaMemcpy(h_weights[0],d_weights[0],sizeof(float) * prob[0].l,cudaMemcpyDeviceToHost));
-	cutilSafeCall(cudaMemcpy(h_weights[1],d_weights[1],sizeof(float) * prob[1].l,cudaMemcpyDeviceToHost));
+	cutilSafeCall(cudaMemcpy(h_weights[0],d_weights[0],sizeof(double) * prob[0].l,cudaMemcpyDeviceToHost));
+	cutilSafeCall(cudaMemcpy(h_weights[1],d_weights[1],sizeof(double) * prob[1].l,cudaMemcpyDeviceToHost));
 
 	if(param.verbosity == 2)
 	{

@@ -5,7 +5,7 @@
 #include "globals.h"
 #include "../common/readsvm.h"
 
-extern void run_cuda_kernel(struct svm_parameter param, float** weights, float *rho);
+extern void run_cuda_kernel(struct svm_parameter param, double** weights, double *rho);
 struct svm_parameter param;		// set by parse_command_line
 
 void exit_with_help()
@@ -124,8 +124,8 @@ int main (int argc, char ** argv)
 		printf(" number of vectors in class 1 = %d and in class 2 = %d \n", prob[0].l, prob[1].l);
 	}
 
-	float* weights[2];
-	float rho;
+	double* weights[2];
+	double rho;
 	run_cuda_kernel(param, weights,&rho);
 
     struct svm_model model;
