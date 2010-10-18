@@ -18,25 +18,28 @@ def run(datafile, seriell=False, kernel = 2, c=1, gamma=0.5, e=0.01, i=1000000):
 	if seriell:
 		args[0] = "./svm-train"
 	
+	#print 'seriell: ', seriell, 'args: ', args
+	
 	p = subprocess.Popen(args, stdout = subprocess.PIPE)
 	
 	return p.communicate()[0]
 
 def runandwrite(datafile, outfile, seriell=False, kernel = 2, c=1, gamma=0.5, e=0.01, i=1000000):
-	output = run(datafile, kernel = kernel, c=c, gamma=gamma, e=e, i=i)
+	output = run(datafile, seriell = seriell, kernel = kernel, c=c, gamma=gamma, e=e, i=i)
+	print output
 	ol = output.split(',')
-
+	print ol
 	time = ol[0].split()[1]
 	iters = ol[1].split()[1]
 
-	row = [df_pathes[0], seriell, time, iters, float(iters)/float(time), kernel, c, gamma, e, i]
+	row = [datafile, seriell, time, iters, float(iters)/float(time), kernel, c, gamma, e, i]
 	outfile.writerow(row)
 
 	
 datafiles = "a1a a2a a3a a4a breast-cancer_scale ionosphere_scale"
 df_pathes = [ ''.join(["data/", file]) for file in datafiles.split()  ]
 
-seriell = False
+#seriell = False
 kernel = 2
 c = 1
 gamma = 0.5
@@ -48,10 +51,10 @@ w.writerow([])
 w.writerow([datetime.datetime.now()])
 w.writerow(['Filename', 'seriell', 'time', 'iters', 'i/t', 'kernel', 'c', 'gamma', 'e', 'i'])
 
-for kernel in [0,2]:
-	for datafile in df_pathes:
-		for seriell in [False, True]:
-			for repetition in range(10):
+for repetition in range(10):
+	for kernel in [0,2]:
+		for datafile in df_pathes:
+			for seriell in [True, False]:
 				print 'run kernel %d, datafile %s, repetition %d, seriell %s' % (kernel, datafile, repetition, seriell)
 				runandwrite(datafile, w, seriell = seriell, kernel = kernel, c=c, gamma=gamma, e=e, i=i)
 
