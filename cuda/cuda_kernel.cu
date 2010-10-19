@@ -54,8 +54,8 @@ inline double powi(double base, int times)
 
 __device__ double kernel_linear(int set1, int element1, int set2, int element2) //todo: als template implementieren
 {
-	double* px = &(g_data[set1][ element1 * maximum_index ]);
-	double* py = &(g_data[set2][ element2 * maximum_index ]);
+	double* px = &(g_data[set1][ element1 ]);
+	double* py = &(g_data[set2][ element2 ]);
 
 	double ret = dot(px, data_size[set1], py, data_size[set2] );
 	if(set1 == set2 && element1 == element2)
@@ -75,8 +75,8 @@ __device__ double power(double base, int exponent) { //todo: effizienter berechn
 
 __device__ double kernel_poly(int set1, int element1, int set2, int element2)
 {
-	double* px = &(g_data[set1][ element1 * maximum_index ]);
-	double* py = &(g_data[set2][ element2 * maximum_index ]);
+	double* px = &(g_data[set1][ element1 ]);
+	double* py = &(g_data[set2][ element2 ]);
 
 	double ret = power(param.gamma*dot(px, data_size[set1], py, data_size[set2] )+param.coef0,param.degree);
 	if(set1 == set2 && element1 == element2)
@@ -103,8 +103,8 @@ __device__ double kernel_rbf(int set1, int element1, int set2, int element2)
 
 __device__ double kernel_sigmoid(int set1, int element1, int set2, int element2)
 {
-	double* px = &(g_data[set1][ element1 * maximum_index ]);
-	double* py = &(g_data[set2][ element2 * maximum_index ]);
+	double* px = &(g_data[set1][ element1 ]);
+	double* py = &(g_data[set2][ element2 ]);
 
 	double ret = tanh(param.gamma*dot(px, data_size[set1], py, data_size[set2])+param.coef0);
 	if(set1 == set2 && element1 == element2)
