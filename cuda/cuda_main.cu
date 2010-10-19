@@ -169,7 +169,7 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	double** weights, do
 			struct svm_node *p = prob[i].x[j];
 			while(p->index != -1)
 			{
-				h_data_temp[ max_index * j + (p->index - 1) ] = p->value;
+				h_data_temp[ j + prob[i].l * (p->index - 1) ] = p->value;
 				p++;
 			}
 		}
