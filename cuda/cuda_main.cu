@@ -262,23 +262,24 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	double** weights, do
 		// check if kernel execution generated and error
 		cutilCheckMsg("Kernel execution failed");
 
-		cudaThreadSynchronize();
+		//cudaThreadSynchronize();
 		// check if kernel execution generated and error
-		cutilCheckMsg("Kernel execution failed");
+		//cutilCheckMsg("Kernel execution failed");
 
 		reduction_findMaximum();
 
 		double max1[1];
 		double max2[1];
-		int max1_idx[1];
-		int max2_idx[1];
 		cutilSafeCall(cudaMemcpy( &max1, d_reduction_value[0], sizeof(double), cudaMemcpyDeviceToHost));
 		cutilSafeCall(cudaMemcpy( &max2, d_reduction_value[1], sizeof(double), cudaMemcpyDeviceToHost));
-		cutilSafeCall(cudaMemcpy( &max1_idx, d_reduction_index[0], sizeof(int), cudaMemcpyDeviceToHost));
-		cutilSafeCall(cudaMemcpy( &max2_idx, d_reduction_index[1], sizeof(int), cudaMemcpyDeviceToHost));
 
 		if(param.verbosity == 2) 
 		{
+			int max1_idx[1];
+			int max2_idx[1];
+			cutilSafeCall(cudaMemcpy( &max1_idx, d_reduction_index[0], sizeof(int), cudaMemcpyDeviceToHost));
+			cutilSafeCall(cudaMemcpy( &max2_idx, d_reduction_index[1], sizeof(int), cudaMemcpyDeviceToHost));
+
 			printf("max[0] = %d (%f)   max[1] = %d (%f)  \n", max1_idx[0], max1[0], max2_idx[0], max2[0]);
 		}
 
