@@ -186,7 +186,7 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	double** weights, do
 	double *d_distance, *d_rho;
 	double *d_dot_same[2];
 
-	cutilSafeCall(cudaMalloc((void**) &d_distance, sizeof(double)));
+	cutilSafeCall(cudaMalloc((void**) &d_distance, 3 * sizeof(double)));
 	cutilSafeCall(cudaMalloc((void**) &d_rho, sizeof(double)));
 	cutilSafeCall(cudaMalloc((void**) &d_dot_xi_x, prob[0].l * sizeof(double)));
 	cutilSafeCall(cudaMalloc((void**) &d_dot_yi_x, prob[0].l * sizeof(double)));
@@ -281,8 +281,9 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	double** weights, do
 
 		reduction_findMaximum();
 
-		cutilSafeCall(cudaMemcpyAsync( max1, d_reduction_value[0], sizeof(double), cudaMemcpyDeviceToHost, 0));
-		cutilSafeCall(cudaMemcpyAsync( max2, d_reduction_value[1], sizeof(double), cudaMemcpyDeviceToHost, 0));
+		cutilSafeCall(cudaMemcpyAsync( h_distance, d_distance, 3 * sizeof(double), cudaMemcpyDeviceToHost, 0));
+		//cutilSafeCall(cudaMemcpyAsync( max1, d_reduction_value[0], sizeof(double), cudaMemcpyDeviceToHost, 0));
+		//cutilSafeCall(cudaMemcpyAsync( max2, d_reduction_value[1], sizeof(double), cudaMemcpyDeviceToHost, 0));
 
 		if(param.verbosity == 2) 
 		{
@@ -292,15 +293,14 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	double** weights, do
 			printf("max[0] = %d (%f)   max[1] = %d (%f)  \n", max1_idx[0], max1[0], max2_idx[0], max2[0]);
 		}
 
-		cutilSafeCall(cudaMemcpyAsync( h_distance, d_distance, sizeof(double), cudaMemcpyDeviceToHost, 0));
 
 
 		cudaThreadSynchronize();
 		// check if kernel execution generated and error
 		cutilCheckMsg("Kernel execution failed");
 		
-        double adg = max1[0] + max2[0];
-        double rdg_nenner = *h_distance - adg;
+        double adg = h_distance[1] + h_distance[2];
+        double rdg_nenner = h_distance[0] - adg;
         double rdg;
 
         if (rdg_nenner <= 0)

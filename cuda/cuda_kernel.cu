@@ -809,7 +809,10 @@ __global__ void cuda_kernel_lambda()
 		dot_xi_yi = update_xi_yi(dot_xi_yi, dot_xi_y, max_q_index, lambda);
 	}
 
-	*distance = dot_xi_xi + dot_yi_yi - 2 * dot_xi_yi;
+	distance[0] = dot_xi_xi + dot_yi_yi - 2 * dot_xi_yi;
+	distance[1] = max_p;
+	distance[2] = max_q;
+	
 	*rho = dot_xi_yi - dot_xi_xi - (dot_xi_xi + dot_yi_yi - 2 * dot_xi_yi)/2;
 }
 
