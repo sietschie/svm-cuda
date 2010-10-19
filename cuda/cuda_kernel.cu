@@ -27,13 +27,13 @@ __device__ double* get_element(int id, int set);
 
 __device__ struct svm_parameter param;
 
-__device__ double dot(double* px, double *py)
+__device__ double dot(double* px, int xstride, double *py, int ystride)
 {
 	double sum = 0.0;
 	int i;
 	for(i=0; i< maximum_index; i++)
 	{
-		sum += px[i] * py[i];
+		sum += px[i*xstride] * py[i*ystride];
 	}
 	return sum;
 }
@@ -54,10 +54,10 @@ inline double powi(double base, int times)
 
 __device__ double kernel_linear(int set1, int element1, int set2, int element2) //todo: als template implementieren
 {
-	double* px = &(g_data[set1][ element1 * maximum_index ]);
-	double* py = &(g_data[set2][ element2 * maximum_index ]);
+	double* px = &(g_data[set1][ element1 ]);
+	double* py = &(g_data[set2][ element2 ]);
 
-	double ret = dot(px, py );
+	double ret = dot(px, data_size[set1], py, data_size[set2] );
 	if(set1 == set2 && element1 == element2)
 		ret += 1.0/param.C;
 	return ret;
@@ -75,10 +75,10 @@ __device__ double power(double base, int exponent) { //todo: effizienter berechn
 
 __device__ double kernel_poly(int set1, int element1, int set2, int element2)
 {
-	double* px = &(g_data[set1][ element1 * maximum_index ]);
-	double* py = &(g_data[set2][ element2 * maximum_index ]);
+	double* px = &(g_data[set1][ element1 ]);
+	double* py = &(g_data[set2][ element2 ]);
 
-	double ret = power(param.gamma*dot(px, py )+param.coef0,param.degree);
+	double ret = power(param.gamma*dot(px, data_size[set1], py, data_size[set2] )+param.coef0,param.degree);
 	if(set1 == set2 && element1 == element2)
 		ret += 1.0/param.C;
 	return ret;
@@ -86,12 +86,12 @@ __device__ double kernel_poly(int set1, int element1, int set2, int element2)
 
 __device__ double kernel_rbf(int set1, int element1, int set2, int element2)
 {
-	double* px = &(g_data[set1][ element1 * maximum_index ]);
-	double* py = &(g_data[set2][ element2 * maximum_index ]);
+	double* px = &(g_data[set1][ element1 ]);
+	double* py = &(g_data[set2][ element2 ]);
 
-	double dots = ( dot(px, px)+
-						dot(py, py)-2*
-						dot(px, py)); //todo: dot(x,x) vorberechnen??
+	double dots = ( dot(px, data_size[set1], px, data_size[set1])+
+						dot(py, data_size[set2], py, data_size[set2])-2*
+						dot(px, data_size[set1], py, data_size[set2])); //todo: dot(x,x) vorberechnen??
 	double wgamma = -param.gamma*dots;
 	double wexp = exp(wgamma);
 
@@ -103,10 +103,10 @@ __device__ double kernel_rbf(int set1, int element1, int set2, int element2)
 
 __device__ double kernel_sigmoid(int set1, int element1, int set2, int element2)
 {
-	double* px = &(g_data[set1][ element1 * maximum_index ]);
-	double* py = &(g_data[set2][ element2 * maximum_index ]);
+	double* px = &(g_data[set1][ element1 ]);
+	double* py = &(g_data[set2][ element2 ]);
 
-	double ret = tanh(param.gamma*dot(px, py)+param.coef0);
+	double ret = tanh(param.gamma*dot(px, data_size[set1], py, data_size[set2])+param.coef0);
 	if(set1 == set2 && element1 == element2)
 		ret += 1.0/param.C;
 	return ret;

@@ -169,7 +169,7 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	double** weights, do
 			struct svm_node *p = prob[i].x[j];
 			while(p->index != -1)
 			{
-				h_data_temp[ max_index * j + (p->index - 1) ] = p->value;
+				h_data_temp[ j + prob[i].l * (p->index - 1) ] = p->value;
 				p++;
 			}
 		}
@@ -244,7 +244,20 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	double** weights, do
 	cudaThreadSynchronize();
 	// check if kernel execution generated and error
 	cutilCheckMsg("Kernel execution failed");
+
+	double *max1;
+	double *max2;
+	int *max1_idx;
+	int *max2_idx;
+	double *h_distance;
+
+	cudaHostAlloc((void**) & max1, sizeof(double),cudaHostAllocPortable);
+	cudaHostAlloc((void**) & max2, sizeof(double),cudaHostAllocPortable);
+	cudaHostAlloc((void**) & max1_idx, sizeof(	int),cudaHostAllocPortable);
+	cudaHostAlloc((void**) & max2_idx, sizeof(	int),cudaHostAllocPortable);
+	cudaHostAlloc((void**) & h_distance, sizeof(double),cudaHostAllocPortable);
 	
+		
 	for(i = 0; i<param.maximum_iterations; i++)
 	{
 		cuda_kernel_lambda<<<1, 1>>>();
@@ -262,30 +275,25 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	double** weights, do
 		// check if kernel execution generated and error
 		cutilCheckMsg("Kernel execution failed");
 
-		cudaThreadSynchronize();
+		//cudaThreadSynchronize();
 		// check if kernel execution generated and error
-		cutilCheckMsg("Kernel execution failed");
+		//cutilCheckMsg("Kernel execution failed");
 
 		reduction_findMaximum();
 
-		double max1[1];
-		double max2[1];
-		int max1_idx[1];
-		int max2_idx[1];
-		cutilSafeCall(cudaMemcpy( &max1, d_reduction_value[0], sizeof(double), cudaMemcpyDeviceToHost));
-		cutilSafeCall(cudaMemcpy( &max2, d_reduction_value[1], sizeof(double), cudaMemcpyDeviceToHost));
-		cutilSafeCall(cudaMemcpy( &max1_idx, d_reduction_index[0], sizeof(int), cudaMemcpyDeviceToHost));
-		cutilSafeCall(cudaMemcpy( &max2_idx, d_reduction_index[1], sizeof(int), cudaMemcpyDeviceToHost));
+		cutilSafeCall(cudaMemcpyAsync( max1, d_reduction_value[0], sizeof(double), cudaMemcpyDeviceToHost, 0));
+		cutilSafeCall(cudaMemcpyAsync( max2, d_reduction_value[1], sizeof(double), cudaMemcpyDeviceToHost, 0));
 
 		if(param.verbosity == 2) 
 		{
+			cutilSafeCall(cudaMemcpyAsync( max1_idx, d_reduction_index[0], sizeof(int), cudaMemcpyDeviceToHost, 0));
+			cutilSafeCall(cudaMemcpyAsync( max2_idx, d_reduction_index[1], sizeof(int), cudaMemcpyDeviceToHost, 0));
+
 			printf("max[0] = %d (%f)   max[1] = %d (%f)  \n", max1_idx[0], max1[0], max2_idx[0], max2[0]);
 		}
 
-		double h_distance[1];
-		cutilSafeCall(cudaMemcpy( &h_distance, d_distance, sizeof(double), cudaMemcpyDeviceToHost));
+		cutilSafeCall(cudaMemcpyAsync( h_distance, d_distance, sizeof(double), cudaMemcpyDeviceToHost, 0));
 
-		cutilSafeCall(cudaMemcpy( &h_rho, d_rho, sizeof(double), cudaMemcpyDeviceToHost));
 
 		cudaThreadSynchronize();
 		// check if kernel execution generated and error
@@ -324,6 +332,9 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	double** weights, do
 
 	// copy results back and print them
 
+	cutilSafeCall(cudaMemcpyAsync( h_rho, d_rho, sizeof(double), cudaMemcpyDeviceToHost, 0));
+
+	
 	cutilSafeCall(cudaMemcpy(h_weights[0],d_weights[0],sizeof(double) * prob[0].l,cudaMemcpyDeviceToHost));
 	cutilSafeCall(cudaMemcpy(h_weights[1],d_weights[1],sizeof(double) * prob[1].l,cudaMemcpyDeviceToHost));
 
