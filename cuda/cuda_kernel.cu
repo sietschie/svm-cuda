@@ -399,11 +399,15 @@ __global__ void reduce6(int *g_data_index, double *g_data_value, unsigned int se
 			if(set == 0)
 			{
 				max_p = sdata_value[0];
+				distance[1] = max_p;
+
 				max_p_index = sdata_index[0];
 			}
 			else
 			{
 				max_q = sdata_value[0];
+				distance[2] = max_q;
+
 				max_q_index = sdata_index[0];
 			}
 		}
@@ -810,8 +814,6 @@ __global__ void cuda_kernel_lambda()
 	}
 
 	distance[0] = dot_xi_xi + dot_yi_yi - 2 * dot_xi_yi;
-	distance[1] = max_p;
-	distance[2] = max_q;
 	
 	*rho = dot_xi_yi - dot_xi_xi - (dot_xi_xi + dot_yi_yi - 2 * dot_xi_yi)/2;
 }
