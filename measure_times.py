@@ -5,8 +5,8 @@ import datetime
 
 p = subprocess.Popen(["./svm-train", "-v",str(0), "data/a1a"], stdout = subprocess.PIPE)
 
-def run(datafile, seriell=False, kernel = 2, c=1, gamma=0.5, e=0.01, i=1000000):
-	args = ["./svm-cuda-train", 
+def run(datafile, binary='./svm-cuda-train', kernel = 2, c=1, gamma=0.5, e=0.01, i=1000000):
+	args = [binary, 
 			"-t", str(kernel), 
 			"-v", "0", 
 			"-c", str(c), 
@@ -15,17 +15,14 @@ def run(datafile, seriell=False, kernel = 2, c=1, gamma=0.5, e=0.01, i=1000000):
 			"-i", str(i), 
 			datafile]
 	
-	if seriell:
-		args[0] = "./svm-train"
-	
 	#print 'seriell: ', seriell, 'args: ', args
 	
 	p = subprocess.Popen(args, stdout = subprocess.PIPE)
 	
 	return p.communicate()[0]
 
-def runandwrite(datafile, outfile, seriell=False, kernel = 2, c=1, gamma=0.5, e=0.01, i=1000000):
-	output = run(datafile, seriell = seriell, kernel = kernel, c=c, gamma=gamma, e=e, i=i)
+def runandwrite(datafile, outfile, binary='./svm-cuda-train', kernel = 2, c=1, gamma=0.5, e=0.01, i=1000000):
+	output = run(datafile, binary = binary, kernel = kernel, c=c, gamma=gamma, e=e, i=i)
 	#print output
 	ol = output.split(',')
 	print ol
@@ -54,8 +51,8 @@ w.writerow(['Filename', 'seriell', 'time', 'iters', 'i/t', 'kernel', 'c', 'gamma
 for repetition in range(10):
 	for datafile in df_pathes:
 		for kernel in [2,0]:
-			for seriell in [False, True]:
-				print 'run kernel %d, datafile %s, repetition %d, seriell %s' % (kernel, datafile, repetition, seriell)
-				runandwrite(datafile, w, seriell = seriell, kernel = kernel, c=c, gamma=gamma, e=e, i=i)
+			for binary in ['./svm-train', './svm-cuda-train', './svm-cuda-train-float', './svm-cuda-train-doubles']:
+				print 'run binary %s, kernel %d, datafile %s, repetition %d' % (binary, kernel, datafile, repetition)
+				runandwrite(datafile, w, binary = binary, kernel = kernel, c=c, gamma=gamma, e=e, i=i)
 
 w.writerow([datetime.datetime.now()])
