@@ -26,7 +26,7 @@ def run(datafile, seriell=False, kernel = 2, c=1, gamma=0.5, e=0.01, i=1000000):
 
 def runandwrite(datafile, outfile, seriell=False, kernel = 2, c=1, gamma=0.5, e=0.01, i=1000000):
 	output = run(datafile, seriell = seriell, kernel = kernel, c=c, gamma=gamma, e=e, i=i)
-	print output
+	#print output
 	ol = output.split(',')
 	print ol
 	time = ol[0].split()[1]
@@ -52,9 +52,9 @@ w.writerow([datetime.datetime.now()])
 w.writerow(['Filename', 'seriell', 'time', 'iters', 'i/t', 'kernel', 'c', 'gamma', 'e', 'i'])
 
 for repetition in range(10):
-	for kernel in [0,2]:
-		for datafile in df_pathes:
-			for seriell in [True, False]:
+	for datafile in df_pathes:
+		for kernel in [2,0]:
+			for seriell in [False, True]:
 				print 'run kernel %d, datafile %s, repetition %d, seriell %s' % (kernel, datafile, repetition, seriell)
 				runandwrite(datafile, w, seriell = seriell, kernel = kernel, c=c, gamma=gamma, e=e, i=i)
 
