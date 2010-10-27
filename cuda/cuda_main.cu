@@ -254,11 +254,12 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	double** weights, do
 	int *max2_idx;
 	double *h_distance;
 
-	cudaHostAlloc((void**) & max1, sizeof(double),cudaHostAllocPortable);
-	cudaHostAlloc((void**) & max2, sizeof(double),cudaHostAllocPortable);
-	cudaHostAlloc((void**) & max1_idx, sizeof(	int),cudaHostAllocPortable);
-	cudaHostAlloc((void**) & max2_idx, sizeof(	int),cudaHostAllocPortable);
-	cudaHostAlloc((void**) & h_distance, sizeof(double),cudaHostAllocPortable);
+	cutilSafeCall( cudaHostAlloc((void**) & max1, sizeof(double),cudaHostAllocPortable));
+	cutilSafeCall( cudaHostAlloc((void**) & max2, sizeof(double),cudaHostAllocPortable));
+	cutilSafeCall( cudaHostAlloc((void**) & max1_idx, sizeof(	int),cudaHostAllocPortable));
+	cutilSafeCall( cudaHostAlloc((void**) & max2_idx, sizeof(	int),cudaHostAllocPortable));
+	cutilSafeCall( cudaHostAlloc((void**) & h_distance, 3 * sizeof(double),cudaHostAllocWriteCombined));
+	//h_distance = (double*) malloc(sizeof(double) * 3);
 	
 		
 	for(i = 0; i<param.maximum_iterations; i++)
@@ -283,9 +284,8 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	double** weights, do
 		//cutilCheckMsg("Kernel execution failed");
 
 		reduction_findMaximum();
-
-		cutilSafeCall(cudaMemcpy( h_distance, d_distance, 3 * sizeof(double), cudaMemcpyDeviceToHost));
-		//cutilSafeCall(cudaMemcpyAsync( h_distance, d_distance, 3 * sizeof(double), cudaMemcpyDeviceToHost, 0));
+		//cutilSafeCall(cudaMemcpy( h_distance, d_distance, 3 * sizeof(double), cudaMemcpyDeviceToHost));
+		cutilSafeCall(cudaMemcpyAsync( h_distance, d_distance, 3 * sizeof(double), cudaMemcpyDeviceToHost, 0));
 		//cutilSafeCall(cudaMemcpyAsync( max1, d_reduction_value[0], sizeof(double), cudaMemcpyDeviceToHost, 0));
 		//cutilSafeCall(cudaMemcpyAsync( max2, d_reduction_value[1], sizeof(double), cudaMemcpyDeviceToHost, 0));
 
