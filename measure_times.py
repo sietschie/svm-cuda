@@ -5,7 +5,7 @@ import datetime
 
 p = subprocess.Popen(["./svm-train", "-v",str(0), "data/a1a"], stdout = subprocess.PIPE)
 
-def run(datafile, binary='./svm-cuda-train', kernel = 2, c=1, gamma=0.5, e=0.01, i=1000000):
+def run(datafile, binary='./svm-cuda-train', kernel = 2, c=1, gamma=0.5, e=0.01, i=1000000, cache=10):
 	args = [binary, 
 			"-t", str(kernel), 
 			"-v", "0", 
@@ -13,23 +13,34 @@ def run(datafile, binary='./svm-cuda-train', kernel = 2, c=1, gamma=0.5, e=0.01,
 			"-g", str(gamma), 
 			"-e", str(e), 
 			"-i", str(i), 
+			"-m", str(cache),
 			datafile]
 	
 	#print 'seriell: ', seriell, 'args: ', args
 	
-	p = subprocess.Popen(args, stdout = subprocess.PIPE)
+	p = subprocess.Popen(args, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 	
-	return p.communicate()[0]
+	return p.communicate()
 
-def runandwrite(datafile, outfile, binary='./svm-cuda-train', kernel = 2, c=1, gamma=0.5, e=0.01, i=1000000):
-	output = run(datafile, binary = binary, kernel = kernel, c=c, gamma=gamma, e=e, i=i)
+def runandwrite(datafile, outfile, binary='./svm-cuda-train', kernel = 2, c=1, gamma=0.5, e=0.01, i=1000000, cache=10):
+	(output, error) = run(datafile, binary = binary, kernel = kernel, c=c, gamma=gamma, e=e, i=i, cache=cache)
 	#print output
-	ol = output.split(',')
-	print ol
-	time = ol[0].split()[1]
-	iters = ol[1].split()[1]
+	if error:
+		print error
+		time = '1'
+		iters = '1'
+	else:
+		try:
+			ol = output.split(',')
+			print ol
+			time = ol[0].split()[1]
+			iters = ol[1].split()[1]
 
-	row = [datafile, seriell, time, iters, float(iters)/float(time), kernel, c, gamma, e, i]
+		except IndexError:
+			time = '123456789.0123455678'
+			iters = '1234567890'
+		
+	row = [datafile, binary, time, iters, float(iters)/float(time), kernel, c, gamma, e, i, cache]
 	outfile.writerow(row)
 
 	
@@ -46,13 +57,14 @@ i=1000000
 w = csv.writer(open('results.csv', 'w'), delimiter=';')
 w.writerow([])
 w.writerow([datetime.datetime.now()])
-w.writerow(['Filename', 'seriell', 'time', 'iters', 'i/t', 'kernel', 'c', 'gamma', 'e', 'i'])
+w.writerow(['Filename', 'binary', 'time', 'iters', 'i/t', 'kernel', 'c', 'gamma', 'e', 'i', 'cache'])
 
 for repetition in range(10):
-	for datafile in df_pathes:
-		for kernel in [2,0]:
-			for binary in ['./svm-train', './svm-cuda-train', './svm-cuda-train-float', './svm-cuda-train-doubles']:
-				print 'run binary %s, kernel %d, datafile %s, repetition %d' % (binary, kernel, datafile, repetition)
-				runandwrite(datafile, w, binary = binary, kernel = kernel, c=c, gamma=gamma, e=e, i=i)
+	for cache in [10, 1000]:
+		for datafile in df_pathes:
+			for kernel in [2,0]:
+				for binary in ['./svm-train', './svm-cuda-train', './svm-cuda-train-float', './svm-cuda-train-doubles']:
+					print 'run binary %s, kernel %d, datafile %s, cache %d, repetition %d' % (binary, kernel, datafile, cache, repetition)
+					runandwrite(datafile, w, binary = binary, kernel = kernel, c=c, gamma=gamma, e=e, i=i, cache=cache)
 
 w.writerow([datetime.datetime.now()])
