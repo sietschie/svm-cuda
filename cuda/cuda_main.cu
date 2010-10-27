@@ -234,11 +234,14 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	double** weights, do
 	start = clock();
 
 	cudaThreadSynchronize();
+	cutilCheckMsg("Kernel execution failed");
 	cuda_kernel_init_kernel<<<nblocks, nthreads>>>();
 	cudaThreadSynchronize();
+	cutilCheckMsg("Kernel execution failed");
 	cuda_kernel_init_findmax<<<1, 1>>>();
 
 	cudaThreadSynchronize();
+	cutilCheckMsg("Kernel execution failed");
 	reduction_findMaximum();
 
 	cudaThreadSynchronize();
@@ -281,7 +284,8 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	double** weights, do
 
 		reduction_findMaximum();
 
-		cutilSafeCall(cudaMemcpyAsync( h_distance, d_distance, 3 * sizeof(double), cudaMemcpyDeviceToHost, 0));
+		cutilSafeCall(cudaMemcpy( h_distance, d_distance, 3 * sizeof(double), cudaMemcpyDeviceToHost));
+		//cutilSafeCall(cudaMemcpyAsync( h_distance, d_distance, 3 * sizeof(double), cudaMemcpyDeviceToHost, 0));
 		//cutilSafeCall(cudaMemcpyAsync( max1, d_reduction_value[0], sizeof(double), cudaMemcpyDeviceToHost, 0));
 		//cutilSafeCall(cudaMemcpyAsync( max2, d_reduction_value[1], sizeof(double), cudaMemcpyDeviceToHost, 0));
 
@@ -332,7 +336,7 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	double** weights, do
 
 	// copy results back and print them
 
-	cutilSafeCall(cudaMemcpyAsync( h_rho, d_rho, sizeof(double), cudaMemcpyDeviceToHost, 0));
+	cutilSafeCall(cudaMemcpy( h_rho, d_rho, sizeof(double), cudaMemcpyDeviceToHost));
 
 	
 	cutilSafeCall(cudaMemcpy(h_weights[0],d_weights[0],sizeof(double) * prob[0].l,cudaMemcpyDeviceToHost));
