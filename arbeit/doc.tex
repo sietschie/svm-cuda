@@ -113,6 +113,14 @@ Beispiel:
 
 \section{Praxis}
 \subsection{Implementierung mit CUDA}
+\subsubsection{Anordnung der Daten im Speicher}
+Werden die Daten im Speicher einfach Vektorweise hintereinander abgelegt, 
+dann führt dies zu Geschwindigkeitseinbußen, da die Datenzugriffe nicht coalesced sind, also nicht in einem Schritt 
+bearbeitet werden können.
+Ordnet man die Daten hingegen so an, dass zuerst die ersten Elemente aller Vektoren im Speicher liege, gefolgt von allen zweiten Elementen usw., dann führt
+dies zu erheblich schnelleren Speicherzugriffen.
+Insgesamt konnte die Geschwindigkeit des Algorithmus durch diese Umordnung der Elemente im Speicher bis zu verdoppelt werden.
+
 \subsubsection{Parallel Reduction}
 Nach der ersten naiven Implementierung des Algorithmus benötigte das serielle Suchen des Maximums etwa 90\% der gesamten Rechenzeit. %TODO: Zahl verifizieren
 Um diesen Vorgang zu parallelisieren verwendete ich die parallele Reduktion~\cite{parallelreduction}.
@@ -145,6 +153,9 @@ Es gibt auch andere Algorithmen zur Synchronisierung der Blöcke. Diese werden a
 %http://eprints.cs.vt.edu/archive/00001087/01/TR_GPU_synchronization.pdf .
 Die Grundlegende Idee ist, dass jeder Block zum Beginn der Synchronisierung eine Variable im globalen Speicher aktualisiert und anschließend den Wert dieser Variable in einer While-Schleife solange abfragt, bis alle Threads diese Variable aktualisiert haben.
 \subsection{Experimente}
+Die Experimente wurden durchgeführt auf einem System mit Intel Xeon E5405 (2,00 GHz) mit 2GB RAM. 
+Die Verwendete Grafikkarte war eine GeForce GTX 260 mit 896MB RAM und 24 Multiprocessoren mit insgesamt 192 Cores die mit einer Frequenz von 1.3GHz laufen.
+
 
 \pagebreak
 \nocite{parallelreduction}
