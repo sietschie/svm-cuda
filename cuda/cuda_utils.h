@@ -40,6 +40,18 @@ inline void __cudaSafeCall( cudaError err, const char *file, const int line )
 	{
 		fprintf(stderr, "cudaSafeCall() Runtime API error in file <%s>, line %i : %s.\n",
 			file, line, cudaGetErrorString( err) );
+		if (cudaErrorInvalidValue == err)
+		{
+			fprintf(stderr, "one or more of the parameters passed to the API call is not within an acceptable range of values. \n");
+		}
+		if (cudaErrorInvalidDevicePointer == err)
+		{
+			fprintf(stderr, "at least one device pointer passed to the API call is not a valid device pointer. \n");
+		}
+		if (cudaErrorInvalidMemcpyDirection == err)
+		{
+			fprintf(stderr, "the direction of the memcpy passed to the API call is not one of the types specified by cudaMemcpyKind. \n");
+		}
 		exit(-1);
 	}
 }
