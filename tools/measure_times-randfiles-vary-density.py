@@ -73,9 +73,9 @@ cache=10
 basename = os.path.basename(sys.argv[0])
 
 w = csv.writer(open('results' + basename + '.csv', 'w'), delimiter=';')
+w.writerow(['Filename', 'binary', 'time', 'iters', 'i/t', 'kernel', 'c', 'gamma', 'e', 'i', 'cache', 'density'])
 w.writerow([])
 w.writerow([datetime.datetime.now()])
-w.writerow(['Filename', 'binary', 'time', 'iters', 'i/t', 'kernel', 'c', 'gamma', 'e', 'i', 'cache', 'density'])
 
 for repetition in range(3):
 	for datafile in df_pathes:
