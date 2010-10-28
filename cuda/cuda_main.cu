@@ -325,8 +325,10 @@ extern "C" void run_cuda_kernel(struct svm_parameter param,	double** weights, do
 			printf("rdg = %e \n", rdg);
 		}
 		
+		#ifndef NO_EPSILON
 		if( rdg < param.eps )
 			break;
+		#endif /* NO_EPSILON */
 	}
 
 	finish = clock();
