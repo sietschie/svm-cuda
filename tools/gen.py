@@ -31,32 +31,26 @@ def printSample(s, label, prob):
 elements = int( sys.argv[1] )
 vectors = int( int( sys.argv[2] ) / 2 )
 	
-root1 = getRandomVector(elements)
-samples1 = generateRandomSamples(root1,vectors)
 
 filename = 'rand-e' + str(elements) + '-v' + str(2*vectors)
 
-f10 = open(filename + '-1.0.data','w')
-f01 = open(filename + '-0.1.data','w')
-f001 = open(filename + '-0.01.data','w')
-for s in samples1:
-	f10.write(printSample(s, '-1', 1))
-for s in samples1:
-    f01.write(printSample(s, '-1', 0.1))
-for s in samples1:
-    f001.write(printSample(s, '-1', 0.01))
+prob_list = [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4,0.3,0.2, 0.5, 0.1, 0.09, 0.08, 0.07, 0.06, 0.05, 0.04, 0.03, 0.02, 0.01, 0.005, 0.001, 0.0001]
 
+root1 = getRandomVector(elements)
+samples1 = generateRandomSamples(root1,vectors)
+
+for prob in prob_list:
+	f = open(filename + '-' + str(prob) + '.data', 'w')
+	for s in samples1:
+		f.write(printSample(s, '-1', prob))
+	f.close()
+		
 root2 = getRandomVector(elements)
 samples2 = generateRandomSamples(root2,vectors)
-	
-for s in samples2:
-    f10.write(printSample(s, '+1', 1))
-for s in samples2:
-    f01.write(printSample(s, '+1', 0.1))
-for s in samples2:
-    f001.write(printSample(s, '+1', 0.01))
 
-f10.close()
-f01.close()
-f001.close()
+for prob in prob_list:
+	f = open(filename + '-' + str(prob) + '.data', 'a')
+	for s in samples1:
+		f.write(printSample(s, '+1', prob))
+	f.close()
 
