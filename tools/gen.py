@@ -1,4 +1,6 @@
+#!/usr/bin/python
 import random
+import sys
 
 def getRandomVector(dim):
     v = []
@@ -26,34 +28,35 @@ def printSample(s, label, prob):
     stringlist.append('\n')
     return " ".join(stringlist)
 
-root1 = getRandomVector(10)
-samples1 = generateRandomSamples(root1,1000)
+elements = int( sys.argv[1] )
+vectors = int( int( sys.argv[2] ) / 2 )
+	
+root1 = getRandomVector(elements)
+samples1 = generateRandomSamples(root1,vectors)
 
-root2 = getRandomVector(10)
-samples2 = generateRandomSamples(root2,1000)
+filename = 'rand-e' + str(elements) + '-v' + str(2*vectors)
 
-filename = 'tmpfile5'
-
-f = open(filename + '-1.0','w')
+f10 = open(filename + '-1.0.data','w')
+f01 = open(filename + '-0.1.data','w')
+f001 = open(filename + '-0.01.data','w')
 for s in samples1:
-    f.write(printSample(s, '-1', 1))
-for s in samples2:
-    f.write(printSample(s, '+1', 1))
-f.close()
-
-
-f = open(filename + '-0.1','w')
+	f10.write(printSample(s, '-1', 1))
 for s in samples1:
-    f.write(printSample(s, '-1', 0.1))
-for s in samples2:
-    f.write(printSample(s, '+1', 0.1))
-f.close()
-
-
-f = open(filename + '-0.01','w')
+    f01.write(printSample(s, '-1', 0.1))
 for s in samples1:
-    f.write(printSample(s, '-1', 0.01))
+    f001.write(printSample(s, '-1', 0.01))
+
+root2 = getRandomVector(elements)
+samples2 = generateRandomSamples(root2,vectors)
+	
 for s in samples2:
-    f.write(printSample(s, '+1', 0.01))
-f.close()
+    f10.write(printSample(s, '+1', 1))
+for s in samples2:
+    f01.write(printSample(s, '+1', 0.1))
+for s in samples2:
+    f001.write(printSample(s, '+1', 0.01))
+
+f10.close()
+f01.close()
+f001.close()
 
