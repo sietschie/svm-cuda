@@ -49,7 +49,7 @@ def runandwrite(datafile, outfile, binary='./svm-cuda-train', kernel = 2, c=1, g
 	
 #datafiles = "a1a a2a a3a a4a breast-cancer_scale ionosphere_scale"
 
-datafiles = 'rand-e1024-v32768-1.0.data  rand-e2048-v16384-1.0.data  rand-e4096-v8192-1.0.data rand-e16384-v2048-1.0.data  rand-e32768-v1024-1.0.data  rand-e8192-v4096-1.0.data'
+datafiles = 'rand-e1024-v32768-1.data  rand-e2048-v16384-1.0.data  rand-e4096-v8192-1.0.data rand-e16384-v2048-1.0.data  rand-e32768-v1024-1.0.data  rand-e8192-v4096-1.0.data'
 
 
 df_pathes = [ ''.join(["tools/", file]) for file in datafiles.split()  ]

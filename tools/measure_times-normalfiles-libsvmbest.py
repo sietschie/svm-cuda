@@ -50,7 +50,7 @@ def runandwrite(datafile, outfile, binary='./svm-cuda-train', kernel = 2, c=1, g
 datafiles = "a1a a2a a3a a4a breast-cancer_scale ionosphere_scale"
 df_pathes = [ ''.join(["data/", file]) for file in datafiles.split()  ]
 
-input_list = []
+input_list = range(6)
 input_list[0] = ( df_pathes[0], 8192.0, 3.0517578125e-05 )
 input_list[1] = ( df_pathes[1], 8.0, 0.03125 )
 input_list[2] = ( df_pathes[2], 512.0, 0.00048828125 )
