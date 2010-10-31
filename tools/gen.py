@@ -39,7 +39,7 @@ if sys.argv[3] == 'varydensity':
 else:
 	prob_list = [1]
 	
-print 'generating random data. Elements %d, Vectors: %d, list of probabilities: ', prob_list
+print 'generating random data. Elements %d, Vectors: %d, list of probabilities: ' % (elements, vectors), prob_list
 
 root1 = getRandomVector(elements)
 samples1 = generateRandomSamples(root1,vectors)
