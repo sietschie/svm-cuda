@@ -35,12 +35,12 @@ variance = {}
 for k in times.keys():
 	time[k] = sum(times[k]) / len(times[k])
 	quotient[k] = sum(quotients[k]) / len(quotients[k])
-	#time[k] = min(times[k]) 
-	#quotient[k] = min(quotients[k])
 	squared_sum = 0
 	for t in times[k]:
 		squared_sum += (t - time[k]) * (t - time[k])
 	variance[k] = squared_sum / len(times[k])
+	time[k] = min(times[k]) 
+	quotient[k] = min(quotients[k])
 	
 	
 
