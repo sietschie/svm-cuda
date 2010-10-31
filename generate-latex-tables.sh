@@ -2,10 +2,11 @@
 
 #TODO: generate nicer filenames, "-d" = don't run the actual tests, just generate the tables from the results file
 
+make
 
 if [ "$1" != "-d" ]
 then
-
+	rm resultsmeasure_times*
 	#generate random data
 	cd tools
 	./gen.py 1024 32768 varydensity
