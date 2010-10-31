@@ -158,6 +158,155 @@ Die Verwendete Grafikkarte war eine GeForce GTX 260 mit 896MB RAM und 24 Multipr
 
 
 \pagebreak
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+dataset & seriell & cuda & speedup \\
+\hline
+a1a & 2.25 & 6.74 & 0.33 \\
+a2a & 6.65 & 12.41 & 0.54 \\
+a3a & 18.31 & 16.76 & 1.09 \\
+a4a & 69.15 & 24.05 & 2.88 \\
+breast-cancer & 0.04 & 1.08 & 0.04 \\
+ionosphere & 0.04 & 1.02 & 0.04 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{ c=1, g=0.5, Kernel: gauss, cachesize: 1000}
+\end{table}
+
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+dataset & seriell & cuda & speedup \\
+\hline
+a1a & 6.80 & 6.37 & 1.07 \\
+a2a & 16.66 & 11.19 & 1.49 \\
+a3a & 30.66 & 15.00 & 2.04 \\
+a4a & 71.41 & 23.89 & 2.99 \\
+breast-cancer & 0.36 & 1.02 & 0.35 \\
+ionosphere & 0.44 & 0.99 & 0.44 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{ c=1, g=0.5, Kernel: gauss, cachesize: 10}
+\end{table}
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+dataset & seriell & cuda & speedup \\
+\hline
+a1a & 42.98 & 62.69 & 0.69 \\
+a2a & 94.83 & 102.61 & 0.92 \\
+a3a & 181.44 & 134.93 & 1.34 \\
+a4a & 436.81 & 218.06 & 2.00 \\
+breast-cancer & 0.29 & 2.96 & 0.10 \\
+ionosphere & 1.07 & 6.35 & 0.17 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{ c=1, g=0.5, Kernel: linear, cachesize: 10}
+\end{table}
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+dataset & seriell & cuda & speedup \\
+\hline
+a1a & 2.50 & 84.34 & 0.03 \\
+a2a & 28.00 & 138.21 & 0.20 \\
+a3a & 102.98 & 163.38 & 0.63 \\
+a4a & 350.22 & 237.19 & 1.48 \\
+breast-cancer & 0.06 & 3.10 & 0.02 \\
+ionosphere & 0.08 & 6.51 & 0.01 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{ c=1, g=0.5, Kernel: linear, cachesize: 1000}
+\end{table}
+
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+Dichte & seriell & cuda & speedup \\
+\hline
+1.0 & 38.24 & 0.82 & 46.83 \\
+0.9 & 44.91 & 0.83 & 54.11 \\
+0.8 & 48.91 & 0.83 & 58.70 \\
+0.75 & 49.44 & 0.83 & 59.56 \\
+0.7 & 48.61 & 0.84 & 58.10 \\
+0.6 & 44.74 & 0.83 & 53.91 \\
+0.5 & 57.75 & 1.28 & 45.23 \\
+0.4 & 31.13 & 0.83 & 37.36 \\
+0.3 & 23.54 & 0.83 & 28.36 \\
+0.2 & 15.75 & 0.83 & 18.98 \\
+0.1 & 8.05 & 0.83 & 9.70 \\
+0.09 & 7.31 & 0.83 & 8.78 \\
+0.08 & 6.55 & 0.83 & 7.89 \\
+0.07 & 5.75 & 0.83 & 6.90 \\
+0.06 & 4.99 & 0.83 & 6.01 \\
+0.05 & 4.30 & 0.83 & 5.20 \\
+0.04 & 3.43 & 0.83 & 4.14 \\
+0.03 & 2.66 & 0.83 & 3.19 \\
+0.02 & 1.86 & 0.83 & 2.24 \\
+0.01 & 1.15 & 0.83 & 1.38 \\
+0.005 & 0.77 & 0.83 & 0.92 \\
+0.001 & 0.41 & 0.83 & 0.49 \\
+0.0001 & 0.23 & 0.83 & 0.27 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{ 32768 Vektoren der Dimension 1024, c=1, Kernel: gauss, cachesize: 10, 100 Iterationen}
+\end{table}
+
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Elements & Vectors & seriell & cuda & speedup \\
+\hline
+1024 & 32768 & 1.00 & 1.00 & 1.00 \\
+2048 & 16384 & 20.42 & 0.45 & 45.71 \\
+4096 & 8192 & 20.38 & 0.40 & 50.94 \\
+8192 & 4096 & 20.36 & 0.53 & 38.42 \\
+16384 & 2048 & 20.34 & 0.95 & 21.34 \\
+32768 & 1024 & 20.37 & 1.83 & 11.13 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{ c=1, Kernel: linear, cachesize: 10, 100 Iterationen}
+\end{table}
+\begin{table}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Dimension & Vectors & seriell & cuda & speedup \\
+\hline
+1024 & 32768 & 38.12 & 0.81 & 47.06 \\
+2048 & 16384 & 39.59 & 0.96 & 41.24 \\
+4096 & 8192 & 39.56 & 0.92 & 43.16 \\
+8192 & 4096 & 39.58 & 1.44 & 27.55 \\
+16384 & 2048 & 39.40 & 2.71 & 14.56 \\
+32768 & 1024 & 39.56 & 5.31 & 7.45 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{ c=1, Kernel: gauss, cachesize: 10, 100 Iterationen}
+\end{table}
+
+
+\clearpage
+
 \nocite{parallelreduction}
 \nocite{interblockgpusync}
 \nocite{introductiontosvm}
