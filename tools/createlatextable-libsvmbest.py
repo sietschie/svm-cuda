@@ -32,6 +32,7 @@ def createTable(data):
 	print '\\end{tabular}'
 	print '\\end{center}'
 	print '\\caption{ Kernel: ' + kernel[data[0]['kernel']] + ', cachesize: ' + data[0]['cache'] + '}'
+	print '\\label{tbl:normal-libsvmbest-' + kernel[data[0]['kernel']] + '-' + data[0]['cache'] + '}'
 	print '\\end{table}'
 
 reader = csv.DictReader(open(sys.argv[1], 'r'), delimiter=';')

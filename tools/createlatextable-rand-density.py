@@ -30,6 +30,7 @@ def createTable(data):
 	print '\\end{tabular}'
 	print '\\end{center}'
 	print '\\caption{ 32768 Vektoren der Dimension 1024, c=1, Kernel: ' + kernel[data[0]['kernel']] + ', cachesize: ' + data[0]['cache'] + ', 100 Iterationen}'
+	print '\\label{tbl:density-' + kernel[data[0]['kernel']] + '-' + data[0]['cache'] + '}'
 	print '\\end{table}'
 
 reader = csv.DictReader(open(sys.argv[1], 'r'), delimiter=';')
