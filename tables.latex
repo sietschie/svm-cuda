@@ -1,0 +1,194 @@
+\begin{table}
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+Dichte & seriell & cuda & speedup \\
+\hline
+1.0 & 38.09 & 0.82 & 46.45 \\
+0.9 & 44.94 & 0.83 & 54.14 \\
+0.8 & 48.92 & 0.83 & 58.94 \\
+0.75 & 1.00 & 1.00 & 1.00 \\
+0.7 & 48.60 & 0.83 & 58.55 \\
+0.6 & 44.69 & 0.83 & 53.84 \\
+0.5 & 57.65 & 1.27 & 45.39 \\
+0.4 & 31.00 & 0.83 & 37.35 \\
+0.3 & 23.49 & 0.83 & 28.30 \\
+0.2 & 15.71 & 0.83 & 18.93 \\
+0.1 & 8.14 & 0.83 & 9.81 \\
+0.09 & 7.33 & 0.83 & 8.83 \\
+0.08 & 6.57 & 0.83 & 7.92 \\
+0.07 & 5.77 & 0.83 & 6.95 \\
+0.06 & 5.03 & 0.83 & 6.06 \\
+0.05 & 4.26 & 0.83 & 5.13 \\
+0.04 & 3.47 & 0.83 & 4.18 \\
+0.03 & 2.61 & 0.83 & 3.14 \\
+0.02 & 1.87 & 0.83 & 2.25 \\
+0.01 & 1.18 & 0.83 & 1.42 \\
+0.005 & 0.76 & 0.83 & 0.92 \\
+0.001 & 0.42 & 0.83 & 0.51 \\
+0.0001 & 0.24 & 0.66 & 0.36 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{ 32768 Vektoren der Dimension 1024, c=1, Kernel: gauss, cachesize: 10, 100 Iterationen}
+\label{tbl:density-gauss-10}
+\end{table}
+
+
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Dimension & Vectors & seriell & cuda & speedup \\
+\hline
+1024 & 32768 & 0.79 & 0.07 & 11.29 \\
+2048 & 16384 & 0.79 & 0.07 & 11.29 \\
+4096 & 8192 & 0.79 & 0.06 & 13.17 \\
+8192 & 4096 & 0.78 & 0.08 & 9.75 \\
+16384 & 2048 & 0.78 & 0.11 & 7.09 \\
+32768 & 1024 & 0.78 & 0.18 & 4.33 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{ c=1, Kernel: linear, cachesize: 10, 100 Iterationen}
+\label{tbl:ratio-linear-10}
+\end{table}
+\begin{table}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Dimension & Vectors & seriell & cuda & speedup \\
+\hline
+1024 & 32768 & 38.10 & 0.82 & 46.46 \\
+2048 & 16384 & 39.55 & 0.94 & 42.07 \\
+4096 & 8192 & 39.56 & 0.90 & 43.96 \\
+8192 & 4096 & 39.45 & 1.41 & 27.98 \\
+16384 & 2048 & 39.42 & 2.65 & 14.88 \\
+32768 & 1024 & 39.42 & 5.20 & 7.58 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{ c=1, Kernel: gauss, cachesize: 10, 100 Iterationen}
+\label{tbl:ratio-gauss-10}
+\end{table}
+
+
+
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+dataset & seriell & cuda & speedup \\
+\hline
+a1a & 2.25 & 6.68 & 0.34 \\
+a2a & 6.65 & 12.34 & 0.54 \\
+a3a & 18.27 & 16.58 & 1.10 \\
+a4a & 68.58 & 23.80 & 2.88 \\
+breast-cancer & 0.04 & 1.07 & 0.04 \\
+ionosphere & 0.04 & 1.03 & 0.04 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{ c=1, g=0.5, Kernel: gauss, cachesize: 1000}
+\label{tbl:normal-c1-g5-gauss-1000}
+\end{table}
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+dataset & seriell & cuda & speedup \\
+\hline
+a1a & 6.79 & 6.33 & 1.07 \\
+a2a & 16.63 & 11.12 & 1.50 \\
+a3a & 30.66 & 14.98 & 2.05 \\
+a4a & 71.29 & 23.61 & 3.02 \\
+breast-cancer & 0.36 & 1.03 & 0.35 \\
+ionosphere & 0.43 & 0.98 & 0.44 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{ c=1, g=0.5, Kernel: gauss, cachesize: 10}
+\label{tbl:normal-c1-g5-gauss-10}
+\end{table}
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+dataset & seriell & cuda & speedup \\
+\hline
+a1a & 42.97 & 62.16 & 0.69 \\
+a2a & 94.79 & 102.23 & 0.93 \\
+a3a & 181.43 & 134.02 & 1.35 \\
+a4a & 433.07 & 216.38 & 2.00 \\
+breast-cancer & 0.29 & 2.92 & 0.10 \\
+ionosphere & 1.07 & 6.31 & 0.17 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{ c=1, g=0.5, Kernel: linear, cachesize: 10}
+\label{tbl:normal-c1-g5-linear-10}
+\end{table}
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+dataset & seriell & cuda & speedup \\
+\hline
+a1a & 2.50 & 83.63 & 0.03 \\
+a2a & 27.72 & 137.19 & 0.20 \\
+a3a & 102.97 & 162.74 & 0.63 \\
+a4a & 350.16 & 234.60 & 1.49 \\
+breast-cancer & 0.06 & 3.07 & 0.02 \\
+ionosphere & 0.07 & 6.51 & 0.01 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{ c=1, g=0.5, Kernel: linear, cachesize: 1000}
+\label{tbl:normal-c1-g5-linear-1000}
+\end{table}
+
+
+
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+dataset & C & $\gamma$ &seriell & cuda & speedup \\
+\hline
+a1a & 8192.0 & 3.0517578125e-05 & 1.82 & 50.20 & 0.04 \\
+a2a & 8.0 & 0.03125 & 15.95 & 50.81 & 0.31 \\
+a3a & 512.0 & 0.00048828125 & 131.57 & 108.70 & 1.21 \\
+a4a & 8192.0 & 3.0517578125e-05 & 471.47 & 179.21 & 2.63 \\
+breast-cancer & 512.0 & 0.0001220703125 & 0.04 & 1.32 & 0.03 \\
+ionosphere & 2.0 & 0.5 & 0.04 & 0.87 & 0.05 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{ Kernel: gauss, cachesize: 1000}
+\label{tbl:normal-libsvmbest-gauss-1000}
+\end{table}
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+dataset & C & $\gamma$ &seriell & cuda & speedup \\
+\hline
+a1a & 8192.0 & 3.0517578125e-05 & 49.48 & 46.05 & 1.07 \\
+a2a & 8.0 & 0.03125 & 66.21 & 44.76 & 1.48 \\
+a3a & 512.0 & 0.00048828125 & 210.51 & 102.86 & 2.05 \\
+a4a & 8192.0 & 3.0517578125e-05 & 529.91 & 176.75 & 3.00 \\
+breast-cancer & 512.0 & 0.0001220703125 & 0.44 & 1.26 & 0.35 \\
+ionosphere & 2.0 & 0.5 & 0.37 & 0.85 & 0.44 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{ Kernel: gauss, cachesize: 10}
+\label{tbl:normal-libsvmbest-gauss-10}
+\end{table}
