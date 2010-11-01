@@ -89,9 +89,26 @@ __device__ double kernel_rbf(int set1, int element1, int set2, int element2)
 	double* px = &(g_data[set1][ element1 ]);
 	double* py = &(g_data[set2][ element2 ]);
 
-	double dots = ( dot(px, data_size[set1], px, data_size[set1])+
-						dot(py, data_size[set2], py, data_size[set2])-2*
-						dot(px, data_size[set1], py, data_size[set2])); //todo: dot(x,x) vorberechnen??
+	
+	double sumxx = 0.0;
+	double sumxy = 0.0;
+	double sumyy = 0.0;
+	
+	int xstride = data_size[set1];
+	int ystride = data_size[set2];
+	
+	int i;
+	for(i=0; i< maximum_index; i++)
+	{
+		sumxy += px[i*xstride] * py[i*ystride];
+		sumxx += px[i*xstride] * px[i*xstride];
+		sumyy += py[i*ystride] * py[i*ystride];
+	}
+
+	
+	double dots = (sumxx +
+						sumyy)-2*
+						sumxy; //todo: dot(x,x) vorberechnen??
 	double wgamma = -param.gamma*dots;
 	double wexp = exp(wgamma);
 

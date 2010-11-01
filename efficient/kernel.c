@@ -1,3 +1,5 @@
+#include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 #include "globals.h"
 #include "kernel.h"
@@ -61,11 +63,29 @@ double kernel_poly(int set1, int element1, int set2, int element2)
     return ret;
 }
 
+double* dot_same2[2];
+
+void init_dotsame()
+{
+    dot_same2[0] = (double *) malloc(prob[0].l * sizeof(double));
+    dot_same2[1] = (double *) malloc(prob[1].l * sizeof(double));
+    // initialisieren
+	int i;
+    for (i=0;i<prob[0].l;i++) {
+        dot_same2[0][i]= dot(prob[0].x[i], prob[0].x[i]); //kernel(0,i,0,i);
+    }
+
+    for (i=0;i<prob[1].l;i++) {
+        dot_same2[1][i]= dot(prob[1].x[i], prob[1].x[i]);;
+    }
+}
+
 double kernel_rbf(int set1, int element1, int set2, int element2)
 {
-    double dots = ( dot(prob[set1].x[element1], prob[set1].x[element1])+
-                        dot(prob[set2].x[element2], prob[set2].x[element2])-2*
-                        dot(prob[set1].x[element1], prob[set2].x[element2]));
+	//printf("1 cached: %f   real: %f\n", dot_same2[set1][element1], dot(prob[set1].x[element1], prob[set1].x[element1]));
+	//printf("2 cached: %f   real: %f\n", dot_same2[set2][element2], dot(prob[set2].x[element2], prob[set2].x[element2]));
+    double dots = ( dot_same2[set1][element1] + dot_same2[set2][element2] ) -2*
+                        dot(prob[set1].x[element1], prob[set2].x[element2]);
     double wgamma = -param.gamma*dots;
     double wexp = exp(wgamma);
 
