@@ -303,6 +303,8 @@ int main (int argc, char ** argv)
 
 	clock_t start, finish;
 	start = clock();
+	if(param.kernel_type == RBF)
+		init_dotsame();
 
     int iterations = compute_weights(x_weights, y_weights);
 
