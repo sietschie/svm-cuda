@@ -18,7 +18,7 @@ def createTable(data):
 	print '\\begin{center}'
 	print '\\begin{tabular}{|l|c|c|c|c|c|}'
 	print '\\hline'
-	print 'dataset & C & $\gamma$ &seriell & cuda & speedup \\\\'
+	print 'Datensatz & C & $\gamma$ & Host & Cuda & Speedup \\\\'
 	print '\\hline'
 	for row in data:
 		#print row

@@ -18,7 +18,7 @@ def createTable(data):
 	print '\\begin{center}'
 	print '\\begin{tabular}{|c|c|c|c|c|}'
 	print '\\hline'
-	print 'Dimension & Vectors & seriell & cuda & speedup \\\\'
+	print 'Dimension & Vektoren & Host & Cuda & Speedup \\\\'
 	print '\\hline'
 	for row in data:
 		#print row
