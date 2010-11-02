@@ -9,6 +9,7 @@ then
 	rm resultsmeasure_times*
 	#generate random data
 	cd tools
+	./gen.py 512 65536
 	./gen.py 1024 32768 varydensity
 	./gen.py 2048 16384
 	./gen.py 4096 8192
