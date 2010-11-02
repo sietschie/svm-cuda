@@ -1,4 +1,5 @@
-\documentclass{scrartcl}
+\documentclass[ngerman]{scrartcl}
+\usepackage[german,ngerman]{babel}
 \usepackage{amsmath}
 \usepackage[utf8]{inputenc}
 \usepackage{url}
@@ -8,7 +9,7 @@
 \subsection{Hard Margin SVM}
 %so formatieren http://jcnts.wordpress.com/2009/11/11/formatting-optimization-problems-with-latex/
 Ziel einer SVM ist es eine Hyperebene zu finden, die zwei Mengen trennt.
-Je nach dem auf welcher Seite der Hyperebene sich neue Punkte befinden, können diese dann der entsprechenden Klasse zugeordnet werden.
+Je nachdem auf welcher Seite der Hyperebene sich neue Punkte befinden, können diese dann der entsprechenden Klasse zugeordnet werden.
 %Anschließend können neue Punkte durch ihre Lage zur Hyperebene klassifiziert werden.
 Es wird die Hyperebene gesucht, bei der ein möglichst großer Bereich um die Hyperebene herum frei von Objekten bleibt.
 Eine Hyperebene wird definiert durch die Normale $w \in \mathcal R^d$ und den Offset $b \in \mathcal R$.
@@ -21,12 +22,12 @@ Für einen positiven Punkt $x^+$ und einen negativen Punkt $x^-$ soll folgendes 
 \end{align}
 
 %Die Hyperebenen $<w,x^+> + b = 1$ und $<w,x^-> + b = -1$ sind die Hyperebenen mit dem maximalen Abstand, die gerade eben noch die beiden Mengen trennen.
-Um die gesuchte ebene $\langle w,x \rangle + b = 0$ mit dem maximalen Abstand zu finden, muss dieser maximiert werden.
+Um die gesuchte Ebene $\langle w,x \rangle + b = 0$ mit dem maximalen Abstand zu finden, muss dieser maximiert werden.
 Durch eine einfache geometrische Überlegung lässt sich zeigen, dass dieser $\frac{1}{\|w\|_2}$ beträgt. Das Maximieren dieses Abstandes entspricht der Minimierung von $\langle w,w \rangle$.
 Es muss also, gegeben einer linear separierbaren Trainingsmenge $S = \lbrace(x_1, y_1),\ldots ,(x_l, y_l)\rbrace$, folgendes Optimierungsproblem gelöst werden:
 %Um nun die Hyperebene mit zu finden, die den maximalen Abstand zu beiden Mengen hat, wird folgende Formal optimiert:
 \begin{align}
-& \underset{b,w}{\text{minimiere}}& &<w,w> \\
+& \underset{b,w}{\text{minimiere}}& & \langle w,w \rangle \\
 & \text{so dass } & & y_i \left( \langle w , x_i \rangle + b \right) \geq 1 \nonumber \\
 & & &i = 1, \ldots, l. \nonumber
 \end{align}
@@ -62,7 +63,7 @@ Bei der $\ell_2$-Soft-Margin SVM wird zusätzlich der Term $C \cdot \sum_i \xi^2
 \end{align}
 Das entsprechende duale Problem sieht folgendermaßen aus:
 \begin{align}
-&\underset{\alpha}{maximiere} && \sum_{i=1}^n \alpha_i - \frac{1}{2} \sum_{i,j}^n \alpha_i \alpha_j y_i y_j \left( \langle x_i, x_j \rangle + \frac{1}{C} \delta_{i,j}\right)  \\
+&\underset{\alpha}{\text{maximiere}} && \sum_{i=1}^n \alpha_i - \frac{1}{2} \sum_{i,j}^n \alpha_i \alpha_j y_i y_j \left( \langle x_i, x_j \rangle + \frac{1}{C} \delta_{i,j}\right)  \\
 &\text{so dass } && \sum_{i=1}^n \alpha_i y_i = 0 \\
 &&&  \alpha_i \geq 0, i = 1, \ldots  ,l.
 \end{align}
@@ -114,16 +115,16 @@ Beispiel:
 \section{Praxis}
 \subsection{Implementierung mit CUDA}
 \subsubsection{Anordnung der Daten im Speicher}
-Werden die Daten im Speicher einfach Vektorweise hintereinander abgelegt, 
-dann führt dies zu Geschwindigkeitseinbußen, da die Datenzugriffe nicht coalesced sind, also nicht in einem Schritt 
-bearbeitet werden können.
-Ordnet man die Daten hingegen so an, dass zuerst die ersten Elemente aller Vektoren im Speicher liege, gefolgt von allen zweiten Elementen usw., dann führt
-dies zu erheblich schnelleren Speicherzugriffen.
-Insgesamt konnte die Geschwindigkeit des Algorithmus durch diese Umordnung der Elemente im Speicher bis zu verdoppelt werden.
+Wenn die Daten im Speicher einfach Vektorweise hintereinander gespeichert werden, 
+dann führt dies zu Geschwindigkeitseinbußen. Die Datenzugriffe sind nicht coalesced, können also nicht in einem Schritt 
+bearbeitet werden.
+Ordnet man die Daten hingegen so an, dass zuerst die ersten Elemente aller Vektoren im Speicher liegen, gefolgt von allen zweiten Elementen usw., erhält man erheblich schnellere Speicherzugriffe.
+Denn so können die Speicherzugriffe innerhalb eines Warps zu einem Einzigen zusammengefasst werden.
+%Insgesamt konnte die Geschwindigkeit des Algorithmus durch diese Umordnung der Elemente im Speicher etwa verdoppelt werden.
 
 \subsubsection{Parallel Reduction}
 Nach der ersten naiven Implementierung des Algorithmus benötigte das serielle Suchen des Maximums etwa 90\% der gesamten Rechenzeit. %TODO: Zahl verifizieren
-Um diesen Vorgang zu parallelisieren verwendete ich die parallele Reduktion~\cite{parallelreduction}.
+Um diesen Vorgang zu parallelisieren wird die parallele Reduktion~\cite{parallelreduction} verwendet.
 Dabei werden parallel jeweils zwei Elemente miteinander verglichen.
 Im nächsten Schritt werden die Ergebnisse wieder miteinander verglichen, bis nur noch ein Element übrig bleibt.
 Damit dieser Algorithmus auch effizient auf der CUDA-Hardware ablaufen kann, müssen aber noch einige Eigenheiten des Systems berücksichtigt werden.
@@ -154,29 +155,13 @@ Es gibt auch andere Algorithmen zur Synchronisierung der Blöcke. Diese werden a
 Die Grundlegende Idee ist, dass jeder Block zum Beginn der Synchronisierung eine Variable im globalen Speicher aktualisiert und anschließend den Wert dieser Variable in einer While-Schleife solange abfragt, bis alle Threads diese Variable aktualisiert haben.
 \subsection{Experimente}
 Die Experimente wurden durchgeführt auf einem System mit Intel Xeon E5405 (2,00 GHz) mit 2GB RAM. 
-Die Verwendete Grafikkarte war eine GeForce GTX 260 mit 896MB RAM und 24 Multiprocessoren mit insgesamt 192 Cores die mit einer Frequenz von 1.3GHz laufen.
+Die Verwendete Grafikkarte war eine Tesla C2050 mit 3GB RAM und 14 Multiprocessoren mit insgesamt 448 Cores die mit einer Frequenz von 1.15GHz laufen. Gemessen wurde nur die Zeit der Berechnung nicht jedoch das Kopieren der Daten in den jeweiligen Arbeitsspeicher.
 
+\subsubsection{LIBSVM-Datensätze}
+Die benutzten Datensätze stammen von der LIBSVM-Homepage~\cite{libsvm-data}. Als Abbruchbedingung wurde $\epsilon < 0.01$ gewählt. Die Kosten wurden auf $C=1$ gesetzt. Die Ergebnisse des Testlaufs mit Linearem Kernel sind in Tabelle \ref{tbl:normal-c1-g5-linear-10} zu sehen. Für den Gauss-Kernel wurde $\gamma=0.5$ gesetzt. Die Ergebnisse sind in Tabelle \ref{tbl:normal-c1-g5-gauss-10} zu sehen.
 
-\pagebreak
-
-\begin{table}
-\begin{center}
-\begin{tabular}{|l|c|c|c|}
-\hline
-dataset & seriell & cuda & speedup \\
-\hline
-a1a & 2.25 & 6.74 & 0.33 \\
-a2a & 6.65 & 12.41 & 0.54 \\
-a3a & 18.31 & 16.76 & 1.09 \\
-a4a & 69.15 & 24.05 & 2.88 \\
-breast-cancer & 0.04 & 1.08 & 0.04 \\
-ionosphere & 0.04 & 1.02 & 0.04 \\
-\hline
-\end{tabular}
-\end{center}
-\caption{ c=1, g=0.5, Kernel: gauss, cachesize: 1000}
-\end{table}
-
+Dort ist zu erkennen, dass bei Datensätzen mit wenig Daten (breast-cancer: 684, ionosphere: 351) des Host-Programm im Vorteil ist. Mit steigender Anzahl an Daten (a4a: 4781) wird das CUDA-Programm besser.
+Der Gauss-Kernel erreicht im Vergleich zu einem linearen Kernel einen etwas höheren Speedup.
 
 \begin{table}
 \begin{center}
@@ -184,16 +169,17 @@ ionosphere & 0.04 & 1.02 & 0.04 \\
 \hline
 dataset & seriell & cuda & speedup \\
 \hline
-a1a & 6.80 & 6.37 & 1.07 \\
-a2a & 16.66 & 11.19 & 1.49 \\
-a3a & 30.66 & 15.00 & 2.04 \\
-a4a & 71.41 & 23.89 & 2.99 \\
-breast-cancer & 0.36 & 1.02 & 0.35 \\
-ionosphere & 0.44 & 0.99 & 0.44 \\
+a1a & 6.79 & 6.33 & 1.07 \\
+a2a & 16.63 & 11.12 & 1.50 \\
+a3a & 30.66 & 14.98 & 2.05 \\
+a4a & 71.29 & 23.61 & 3.02 \\
+breast-cancer & 0.36 & 1.03 & 0.35 \\
+ionosphere & 0.43 & 0.98 & 0.44 \\
 \hline
 \end{tabular}
 \end{center}
 \caption{ c=1, g=0.5, Kernel: gauss, cachesize: 10}
+\label{tbl:normal-c1-g5-gauss-10}
 \end{table}
 
 \begin{table}
@@ -202,36 +188,87 @@ ionosphere & 0.44 & 0.99 & 0.44 \\
 \hline
 dataset & seriell & cuda & speedup \\
 \hline
-a1a & 42.98 & 62.69 & 0.69 \\
-a2a & 94.83 & 102.61 & 0.92 \\
-a3a & 181.44 & 134.93 & 1.34 \\
-a4a & 436.81 & 218.06 & 2.00 \\
-breast-cancer & 0.29 & 2.96 & 0.10 \\
-ionosphere & 1.07 & 6.35 & 0.17 \\
+a1a & 42.97 & 62.16 & 0.69 \\
+a2a & 94.79 & 102.23 & 0.93 \\
+a3a & 181.43 & 134.02 & 1.35 \\
+a4a & 433.07 & 216.38 & 2.00 \\
+breast-cancer & 0.29 & 2.92 & 0.10 \\
+ionosphere & 1.07 & 6.31 & 0.17 \\
 \hline
 \end{tabular}
 \end{center}
 \caption{ c=1, g=0.5, Kernel: linear, cachesize: 10}
+\label{tbl:normal-c1-g5-linear-10}
 \end{table}
+
+
+\subsubsection{Generierte Datensätze}
+Um die Möglichkeiten und Grenzen des parallelen Algorithmus auf der Grafikkarte besser ausloten zu können, wurden für dieses Experiment künstlich generierte Daten benutzt.
+Dadurch können die Parameter dieser Daten besser kontrolliert werden.
+
+Die Generierten Daten haben eine Dimension von 1024. Es wurden 32768 Vektoren generiert. Um weitere Daten zu generieren wurde jeweils die Diemension verdoppelt und die Anzahl der Vektoren halbiert. Damit bleibt die Menge der zu verarbeitenden Daten konstant. Um die Laufzeit des Algorithmen trotz dieser großen Daten im Rahmen zu halten, wurde die Anzahl der Iterationen auf 100 begrenzt.
+
+Das Ergebniss dieses Experiments ist in Tabelle \ref{tbl:ratio-gauss-10} dargestellt. Der parallele Algorithmus wird mit zunehmender Anzahl an Vektoren und damit mehr Threads immer schneller. Der serielle Algorithmus hingegen benötigt für die 100 Iterationen immer etwa die gleiche Zeit. Der maximal erreichte Speedup beträgt.
+
+
+Die Bandbreite ist eine Möglichkeit das Potential eines CUDA-Programms zu berechnen. Dazu wird die effektive Bandbreite mit der theorethisch möglichen Bandbreite verglichen.
+Ist der Unterschied sehr groß, dann ist es Wahrscheinlich, dass an einer Stelle des Programms Bandbreite verschenkt wird.
+
+Die Formel zur Berechnung der effektiven Bandbreite lautet folgendermaßen~\cite{cudabestpracticeguide}:
+\begin{align}
+\text{Effektive Bandbreite} = (( \text{Bytes geschrieben} + \text{Bytes gelesen} ) / 10^9 ) / \text{Zeit}
+\end{align}
+
+Es wird der Fall betrachtet, in dem das CUDA-Programm am Besten abschneidet. 
+Dort gibt es $ 32768$ Threads. Jeder Thread berechnet das Kreuzprodukt aus $2$ Vektoren und schreibt das Ergebnis in ein Array. Die Vektoren haben die Dimension $1024$. Es müssen also $2 * 32768 * 1024 + 32768$ Doubles übertragen werden. Das entspricht $(2 * 32768 * 1024 + 32768) * 4$ Bytes. Diese geschieht in jeder Iteration einmal. 
+\begin{align}
+((2 * 32768 * 1024 + 32768) * 4 * 100) / 10^9 / 0.38s = 70.675 \text{ GB/s}
+\end{align}
+Das ist etwa die Hälfte der theoretisch erreichbaren Bandbreite von $144$ GB/s.
 
 \begin{table}
 \begin{center}
-\begin{tabular}{|l|c|c|c|}
+\begin{tabular}{|c|c|c|c|c|}
 \hline
-dataset & seriell & cuda & speedup \\
+Dimension & Vectors & seriell & cuda & speedup \\
 \hline
-a1a & 2.50 & 84.34 & 0.03 \\
-a2a & 28.00 & 138.21 & 0.20 \\
-a3a & 102.98 & 163.38 & 0.63 \\
-a4a & 350.22 & 237.19 & 1.48 \\
-breast-cancer & 0.06 & 3.10 & 0.02 \\
-ionosphere & 0.08 & 6.51 & 0.01 \\
+1024 & 32768 & 38.10 & 0.82 & 46.46 \\
+2048 & 16384 & 39.55 & 0.94 & 42.07 \\
+4096 & 8192 & 39.56 & 0.90 & 43.96 \\
+8192 & 4096 & 39.45 & 1.41 & 27.98 \\
+16384 & 2048 & 39.42 & 2.65 & 14.88 \\
+32768 & 1024 & 39.42 & 5.20 & 7.58 \\
 \hline
 \end{tabular}
 \end{center}
-\caption{ c=1, g=0.5, Kernel: linear, cachesize: 1000}
+\caption{ c=1, Kernel: gauss, cachesize: 10, 100 Iterationen}
+\label{tbl:ratio-gauss-10}
 \end{table}
 
+\subsubsection{Einfluss der Dichte der Datensätze}
+Daten enthalten oft viele Elemente deren Wert $0$ ist. Um Speicherplatz zu sparen werden im LIBSVM-Format deshalb nur die Elemente ungleich Null gespeichert. Im Host-Programm werden die Daten genauso gespeichert und auch verarbeitet.
+
+Für das CUDA-Programm ist diese Art des Speicherns der Daten aber nicht praktikabel. Die benötigten If-Bedingungen würden zu divergierenden Branches innerhalb eines Warps führen. 
+Außerdem könnten die Speicherzugriffe auf den Globalen Speicher nicht mehr zusammengefasst werden. Der zu erwartende maximale Speedup wäre deshalb viel geringer.
+
+Es ist also zu erwarten, dass mit abnehmender Dichte der Daten das Host-Programm schneller wird, das CUDA-Programm aber immer etwa die gleiche Zeit benötigt. 
+
+In Tabelle \ref{tbl:density-gauss-10} ist das Ergebnis dieser Testreihe zu sehen. Das Ergebnis entspricht den Erwartungen. 
+Bei einer Dichte von etwa 0.5\%  benötigen beide Programme die gleiche Zeit.
+
+
+
+%\subsubsubsection{Cache}
+%Der Cache bringt auf der Grafikkarte keinen Geschwindigkeitsvorteil. Vermutlich da die Speicherbandbreite der limitierende Faktor ist.
+%Deshalb wird 
+%Die eigentliche Berechnung 
+
+%Bei der Gauss-Funktion wurde $\gamma=0.5$ gesetzt.
+%\ref{tbl:normal-c1-g5-gauss-1000}
+
+
+
+%\pagebreak
 
 \begin{table}
 \begin{center}
@@ -239,76 +276,113 @@ ionosphere & 0.08 & 6.51 & 0.01 \\
 \hline
 Dichte & seriell & cuda & speedup \\
 \hline
-1.0 & 38.24 & 0.82 & 46.83 \\
-0.9 & 44.91 & 0.83 & 54.11 \\
-0.8 & 48.91 & 0.83 & 58.70 \\
-0.75 & 49.44 & 0.83 & 59.56 \\
-0.7 & 48.61 & 0.84 & 58.10 \\
-0.6 & 44.74 & 0.83 & 53.91 \\
-0.5 & 57.75 & 1.28 & 45.23 \\
-0.4 & 31.13 & 0.83 & 37.36 \\
-0.3 & 23.54 & 0.83 & 28.36 \\
-0.2 & 15.75 & 0.83 & 18.98 \\
-0.1 & 8.05 & 0.83 & 9.70 \\
-0.09 & 7.31 & 0.83 & 8.78 \\
-0.08 & 6.55 & 0.83 & 7.89 \\
-0.07 & 5.75 & 0.83 & 6.90 \\
-0.06 & 4.99 & 0.83 & 6.01 \\
-0.05 & 4.30 & 0.83 & 5.20 \\
-0.04 & 3.43 & 0.83 & 4.14 \\
-0.03 & 2.66 & 0.83 & 3.19 \\
-0.02 & 1.86 & 0.83 & 2.24 \\
-0.01 & 1.15 & 0.83 & 1.38 \\
-0.005 & 0.77 & 0.83 & 0.92 \\
-0.001 & 0.41 & 0.83 & 0.49 \\
-0.0001 & 0.23 & 0.83 & 0.27 \\
+1.0 & 38.09 & 0.82 & 46.45 \\
+0.9 & 44.94 & 0.83 & 54.14 \\
+0.8 & 48.92 & 0.83 & 58.94 \\
+0.7 & 48.60 & 0.83 & 58.55 \\
+0.6 & 44.69 & 0.83 & 53.84 \\
+0.5 & 57.65 & 1.27 & 45.39 \\
+0.4 & 31.00 & 0.83 & 37.35 \\
+0.3 & 23.49 & 0.83 & 28.30 \\
+0.2 & 15.71 & 0.83 & 18.93 \\
+0.1 & 8.14 & 0.83 & 9.81 \\
+0.09 & 7.33 & 0.83 & 8.83 \\
+0.08 & 6.57 & 0.83 & 7.92 \\
+0.07 & 5.77 & 0.83 & 6.95 \\
+0.06 & 5.03 & 0.83 & 6.06 \\
+0.05 & 4.26 & 0.83 & 5.13 \\
+0.04 & 3.47 & 0.83 & 4.18 \\
+0.03 & 2.61 & 0.83 & 3.14 \\
+0.02 & 1.87 & 0.83 & 2.25 \\
+0.01 & 1.18 & 0.83 & 1.42 \\
+0.005 & 0.76 & 0.83 & 0.92 \\
+0.001 & 0.42 & 0.83 & 0.51 \\
+0.0001 & 0.24 & 0.66 & 0.36 \\
 \hline
 \end{tabular}
 \end{center}
 \caption{ 32768 Vektoren der Dimension 1024, c=1, Kernel: gauss, cachesize: 10, 100 Iterationen}
+\label{tbl:density-gauss-10}
 \end{table}
 
 
-\begin{table}
-\begin{center}
-\begin{tabular}{|c|c|c|c|c|}
-\hline
-Elements & Vectors & seriell & cuda & speedup \\
-\hline
-1024 & 32768 & 1.00 & 1.00 & 1.00 \\
-2048 & 16384 & 20.42 & 0.45 & 45.71 \\
-4096 & 8192 & 20.38 & 0.40 & 50.94 \\
-8192 & 4096 & 20.36 & 0.53 & 38.42 \\
-16384 & 2048 & 20.34 & 0.95 & 21.34 \\
-32768 & 1024 & 20.37 & 1.83 & 11.13 \\
-\hline
-\end{tabular}
-\end{center}
-\caption{ c=1, Kernel: linear, cachesize: 10, 100 Iterationen}
-\end{table}
-\begin{table}
-\begin{center}
-\begin{tabular}{|c|c|c|c|c|}
-\hline
-Dimension & Vectors & seriell & cuda & speedup \\
-\hline
-1024 & 32768 & 38.12 & 0.81 & 47.06 \\
-2048 & 16384 & 39.59 & 0.96 & 41.24 \\
-4096 & 8192 & 39.56 & 0.92 & 43.16 \\
-8192 & 4096 & 39.58 & 1.44 & 27.55 \\
-16384 & 2048 & 39.40 & 2.71 & 14.56 \\
-32768 & 1024 & 39.56 & 5.31 & 7.45 \\
-\hline
-\end{tabular}
-\end{center}
-\caption{ c=1, Kernel: gauss, cachesize: 10, 100 Iterationen}
-\end{table}
+
+% \begin{table}
+% \begin{center}
+% \begin{tabular}{|c|c|c|c|c|}
+% \hline
+% Dimension & Vectors & seriell & cuda & speedup \\
+% \hline
+% 1024 & 32768 & 0.79 & 0.07 & 11.29 \\
+% 2048 & 16384 & 0.79 & 0.07 & 11.29 \\
+% 4096 & 8192 & 0.79 & 0.06 & 13.17 \\
+% 8192 & 4096 & 0.78 & 0.08 & 9.75 \\
+% 16384 & 2048 & 0.78 & 0.11 & 7.09 \\
+% 32768 & 1024 & 0.78 & 0.18 & 4.33 \\
+% \hline
+% \end{tabular}
+% \end{center}
+% \caption{ c=1, Kernel: linear, cachesize: 10, 100 Iterationen}
+% \label{tbl:ratio-linear-10}
+% \end{table}
 
 
+
+
+
+
+
+
+
+
+% \begin{table}
+% \begin{center}
+% \begin{tabular}{|l|c|c|c|c|c|}
+% \hline
+% dataset & C & $\gamma$ &seriell & cuda & speedup \\
+% \hline
+% a1a & 8192.0 & 3.0517578125e-05 & 1.82 & 50.20 & 0.04 \\
+% a2a & 8.0 & 0.03125 & 15.95 & 50.81 & 0.31 \\
+% a3a & 512.0 & 0.00048828125 & 131.57 & 108.70 & 1.21 \\
+% a4a & 8192.0 & 3.0517578125e-05 & 471.47 & 179.21 & 2.63 \\
+% breast-cancer & 512.0 & 0.0001220703125 & 0.04 & 1.32 & 0.03 \\
+% ionosphere & 2.0 & 0.5 & 0.04 & 0.87 & 0.05 \\
+% \hline
+% \end{tabular}
+% \end{center}
+% \caption{ Kernel: gauss, cachesize: 1000}
+% \label{tbl:normal-libsvmbest-gauss-1000}
+% \end{table}
+
+% \begin{table}
+% \begin{center}
+% \begin{tabular}{|l|c|c|c|c|c|}
+% \hline
+% dataset & C & $\gamma$ &seriell & cuda & speedup \\
+% \hline
+% a1a & 8192.0 & 3.0517578125e-05 & 49.48 & 46.05 & 1.07 \\
+% a2a & 8.0 & 0.03125 & 66.21 & 44.76 & 1.48 \\
+% a3a & 512.0 & 0.00048828125 & 210.51 & 102.86 & 2.05 \\
+% a4a & 8192.0 & 3.0517578125e-05 & 529.91 & 176.75 & 3.00 \\
+% breast-cancer & 512.0 & 0.0001220703125 & 0.44 & 1.26 & 0.35 \\
+% ionosphere & 2.0 & 0.5 & 0.37 & 0.85 & 0.44 \\
+% \hline
+% \end{tabular}
+% \end{center}
+% \caption{ Kernel: gauss, cachesize: 10}
+% \label{tbl:normal-libsvmbest-gauss-10}
+% \end{table}
+
+
+\subsubsection{Fazit der Experimente}
+Bei kleinen Datensätzen nimmt der Overhead der vielen Kernelstarts einen immer größeren Teil der Rechenzeit ein.
+Das CUDA-Programm ist dann im Vorteil, wenn die Datensätze groß und Dicht sind. 
+Dann erreicht es auch die Hälfte der theorethisch möglichen Bandbreite der Grafikkarte und übertrifft das Host-Programm um mehr als den Faktor 50.
 \clearpage
 
-\nocite{parallelreduction}
-\nocite{interblockgpusync}
+%\nocite{libsvm-data}
+%\nocite{parallelreduction}
+%\nocite{interblockgpusync}
 \nocite{introductiontosvm}
 \nocite{diplomarbeit}
 \nocite{libsvm}
