@@ -59,8 +59,8 @@ kernel = 2
 c = 1
 gamma = 0.5
 e=0.01
-i=100
-cache=10
+i=1000
+cache=1
 
 basename = os.path.basename(sys.argv[0])
 
@@ -70,10 +70,11 @@ w.writerow([])
 w.writerow([datetime.datetime.now()])
 
 for repetition in range(3):
-	for datafile in df_pathes:
-		for kernel in [2,0]:
-			for binary in ['./svm-train', './svm-cuda-train-noeps']:
-				print 'run binary %s, kernel %d, datafile %s, cache %d, repetition %d' % (binary, kernel, datafile, cache, repetition)
-				runandwrite(datafile, w, binary = binary, kernel = kernel, c=c, gamma=gamma, e=e, i=i, cache=cache)
+	for cache in [1,1000]:
+		for datafile in df_pathes:
+			for kernel in [2,0]:
+				for binary in ['./svm-train', './svm-cuda-train-noeps']:
+					print 'run binary %s, kernel %d, datafile %s, cache %d, repetition %d' % (binary, kernel, datafile, cache, repetition)
+					runandwrite(datafile, w, binary = binary, kernel = kernel, c=c, gamma=gamma, e=e, i=i, cache=cache)
 
 w.writerow([datetime.datetime.now()])
