@@ -1,20 +1,67 @@
 \documentclass[ngerman]{scrartcl}
+%% Schriftart Times
+%\usepackage{times}
+\usepackage{microtype}
+%% Abstand zwischen zwei Absätzen
+\setlength{\parskip}{3mm}
+%% Kein Einzug am Absatzbeginn
+\setlength{\parindent}{0mm}
+
 \usepackage[german,ngerman]{babel}
 \usepackage{amsmath}
 \usepackage[utf8]{inputenc}
 \usepackage{url}
 
+\title{%
+\large FSU Jena\\
+Wintersemester 2010\\
+Studienarbeit \\[10mm]
+{\LARGE Implementierung einer SVM auf CUDA}\\[10mm]
+Betreuer: Sören Laue}
+
+\author{%
+Vorgelegt von:\\[10mm]
+Christoph Göring\\
+% Musterstraße \\
+% 12345 Musterstadt\\
+% Telefon: +49.1234.56789\\
+% E-Mail: tmusterstudent@foo.bar\\[10mm]
+% Fachsemester: 6\\[10mm]
+Abgabe: 1. November 2011\\
+}
+% Ausgabe des Datums unterdrücken
+\date{}
+
 \begin{document}
+%% Seitennummerierung auf römisch umschalten
+\pagenumbering{Roman}
+
+\maketitle
+\begin{abstract}
+%Hier folgt eine Zusammenfassung der Arbeit in ein bis zwei Sätzen.
+In dieser Arbeit wird ein geometrischer Algorithmus zum Trainieren einer Support Vector Maschine auf einer CUDA-Grafikkarte implementiert. Anschließend wird das Programm optimiert und mit der seriellen Variante des Programms verglichen.
+\end{abstract}
+
+\clearpage
+\tableofcontents
+\clearpage
+\listoftables
+\clearpage
+%% Seitennummerierung auf Arabisch umschalten
+\pagenumbering{arabic}
+\pagenumbering{arabic}
+
+
 \section{Theorie}
 \subsection{Hard Margin SVM}
 %so formatieren http://jcnts.wordpress.com/2009/11/11/formatting-optimization-problems-with-latex/
 Ziel einer SVM ist es eine Hyperebene zu finden, die zwei Mengen trennt.
-Je nachdem auf welcher Seite der Hyperebene sich neue Punkte befinden, können diese dann der entsprechenden Klasse zugeordnet werden.
+Je nachdem auf welcher Seite der Hyperebene sich neue Punkte befinden, können diese der entsprechenden Klasse zugeordnet werden.
 %Anschließend können neue Punkte durch ihre Lage zur Hyperebene klassifiziert werden.
 Es wird die Hyperebene gesucht, bei der ein möglichst großer Bereich um die Hyperebene herum frei von Objekten bleibt.
 Eine Hyperebene wird definiert durch die Normale $w \in \mathcal R^d$ und den Offset $b \in \mathcal R$.
-Bei der Hard Margin SVM geht man davon aus, dass die Menge linear separierbar sind.
-Für einen positiven Punkt $x^+$ und einen negativen Punkt $x^-$ soll folgendes gelten:
+Bei der Hard Margin SVM geht man davon aus, dass die Mengen linear separierbar sind.
+Für einen positiven Punkt $x^+$ und einen negativen Punkt $x^-$ soll Folgendes gelten:
 %Eine Hyperebene die die beiden Mengen $X$ und $Y$, die sogenannten Trainingsdaten, trennt muss nun folgende Eigenschaft erfüllen:
 \begin{align}
 \langle w , x^+ \rangle + b &\ge 1 \\
@@ -39,7 +86,7 @@ Meistens wird jedoch das duale Problem gelöst:
 &&&  \alpha_i \geq 0, i = 1, \ldots  ,l.
 \end{align}
 
-Die Ursprünglich gesuchten Parameter der Hyperebene können mit folgenden Formeln berechnet werden:
+Die ursprünglich gesuchten Parameter der Hyperebene können mit folgenden Formeln berechnet werden:
 \begin{align}
 w &= \sum_{i=1}^n \alpha_i y_i p_i \\
 b &= \frac{\min_{y_i = 1}(\langle w,x_i \rangle ) + \max_{y_i = -1}(\langle w,x_i \rangle)}{2}
@@ -73,15 +120,16 @@ K'(x,y) = K(x,y) + \frac{1}{C} \delta_{x,y}.
 \end{align}
 
 \subsection{Kernel}
-Eine weitere Möglichkeit nicht linear separierbare Daten dennoch zu trennen stellen die Kernelfunktionen dar.
-Daten, die im Ursprungsraum nicht linear separierbar sind, können dies in einem höherdimensionalen Raum durchaus sein. $\varphi : \mathcal R^d \rightarrow \mathcal R^{d'}$
-Aber anstatt den hochdimensionalen Raum explizit zu berechnen, verwendet man Kernel-Funktionen.
+Eine weitere Möglichkeit nicht linear separierbare Daten dennoch zu trennen, stellen die Kernelfunktionen dar.
+Daten, die im Ursprungsraum nicht linear separierbar sind, können dies in einem höherdimensionalen Raum durchaus sein. 
+%$\varphi : \mathcal R^d \rightarrow \mathcal R^{d'}$
+Anstatt den hochdimensionalen Raum explizit zu berechnen, verwendet man Kernel-Funktionen.
  
 Eine Kernel Funktion ist eine positive semi-definite Funktion $k: \mathcal R^d \times \mathcal R^d \rightarrow \mathcal R$.
 Das Mercer Theorem sagt nun, dass es für eine solche Funktion einen hochdimensionalen Raum $\varphi$ gibt, für den gilt $K(x,y) = \langle \varphi(x), \varphi(y) \rangle$.
-Verwendet man bei der SVM nun die Kernelfunktion zum Berechnen der Skalarprodukte, kann man die lineare Trennung im hochdimensionalen Raum berechnen, ohne den hochdimensionalen Raum jemals explizit zu benutzen.  Lediglich die Kernelfunktion muss ausgewertet werden.
+Verwendet man bei der SVM die Kernelfunktion zum Berechnen der Skalarprodukte, kann man die lineare Trennung im hochdimensionalen Raum berechnen, ohne den hochdimensionalen Raum jemals explizit zu benutzen.  Lediglich die Kernelfunktion muss ausgewertet werden.
 
-\subsection{verwendeter Algorithmus}
+\subsection{Verwendeter Algorithmus}
 Der Grundalgorithmus wurde von Gilbert~\cite{eggilbert} entwickelt. 
 Hier wird er abwechselnd auf 2 Polytope angewendet. 
 Diese Idee stammt von Gärtner und Jaggi~\cite{jaggi}.
@@ -103,20 +151,21 @@ Zur Berechnung werden die Gewichtvektoren verwendet:
 \begin{align}
 p^i = \sum_{p \in P} w^i p
 \end{align}
-Die Skalarprodukte werden nicht in jedem Schritt komplett neu, sondern mit den vorherigen Ergebnissen in einem Update-Schritt effizienter berechnet.
+Die Skalarprodukte werden nicht in jedem Schritt komplett neu, sondern mit den vorherigen Ergebnissen in einem Update-Schritt effizienter, berechnet.
 Beispiel:
 \begin{align}
 %\langle p - p^i, q^i - p^i \rangle &= \langle p - (\lambda p^{i-1} + (1-\lambda) p_{max}), q^{i-1} - (\lambda p^{i-1} + (1-\lambda) p_{max}) \rangle
 \langle p , p^i \rangle &= \langle p , \lambda p^{i-1} + (1-\lambda) p_{max} \rangle \\
 &= \langle p, \lambda p^{i-1} \rangle + \langle p, (1-\lambda) p_{max} \rangle \\
-&= \lambda \langle p, p^{i-1} \rangle + (1-\lambda) \langle p, p_{max} \rangle \\
+&= \lambda \langle p, p^{i-1} \rangle + (1-\lambda) \langle p, p_{max} \rangle 
 \end{align}
 
+\clearpage
 \section{Praxis}
 \subsection{Implementierung mit CUDA}
 \subsubsection{Anordnung der Daten im Speicher}
-Wenn die Daten im Speicher einfach Vektorweise hintereinander gespeichert werden, 
-dann führt dies zu Geschwindigkeitseinbußen. Die Datenzugriffe sind nicht coalesced, können also nicht in einem Schritt 
+Die Speicherung der Daten vektorweise hintereinander führt zu Geschwindigkeitseinbußen. 
+Die Datenzugriffe sind nicht coalesced, können also nicht in einem Schritt 
 bearbeitet werden.
 Ordnet man die Daten hingegen so an, dass zuerst die ersten Elemente aller Vektoren im Speicher liegen, gefolgt von allen zweiten Elementen usw., erhält man erheblich schnellere Speicherzugriffe.
 Denn so können die Speicherzugriffe innerhalb eines Warps zu einem Einzigen zusammengefasst werden.
@@ -124,43 +173,44 @@ Denn so können die Speicherzugriffe innerhalb eines Warps zu einem Einzigen zus
 
 \subsubsection{Parallel Reduction}
 Nach der ersten naiven Implementierung des Algorithmus benötigte das serielle Suchen des Maximums etwa 90\% der gesamten Rechenzeit. %TODO: Zahl verifizieren
-Um diesen Vorgang zu parallelisieren wird die parallele Reduktion~\cite{parallelreduction} verwendet.
+Um diesen Vorgang zu parallelisieren wird eine parallel reduction~\cite{parallelreduction} verwendet.
 Dabei werden parallel jeweils zwei Elemente miteinander verglichen.
 Im nächsten Schritt werden die Ergebnisse wieder miteinander verglichen, bis nur noch ein Element übrig bleibt.
-Damit dieser Algorithmus auch effizient auf der CUDA-Hardware ablaufen kann, müssen aber noch einige Eigenheiten des Systems berücksichtigt werden.
-Dazu gehört unter anderem das verhindern von divergierenden Threads innerhalb eines Warps und ein anpassen der Adressierung um Bank-Konflikte zu vermeiden.
-Desweiteren tragen Loop-Unrolling und C++-Templates dazu bei, nicht benötigte Instruktionen aus den Kernel zu entfernen.
+Damit dieser Algorithmus auch effizient auf der CUDA-Hardware ablaufen kann, müssen noch einige Eigenheiten des Systems berücksichtigt werden.
+Dazu gehört unter anderem das Verhindern von divergierenden Threads innerhalb eines Warps und ein Anpassen der Adressierung um Bank-Konflikte zu vermeiden.
+Desweiteren tragen Loop-Unrolling und C++-Templates dazu bei, nicht benötigte Instruktionen aus dem Kernel zu entfernen.
 Mit diesen Techniken konnte die Geschwinidgkeit des einfachen parallelen Algorithmus um den Faktor 20 gesteigert werden.
 %der spezielle max-algorithmus: parallele reduktion
 %http://developer.download.nvidia.com/compute/cuda/1_1/Website/projects/reduction/doc/reduction.pdf
 %TODO: Bilder von den Diagrammen?
-\subsubsection{interblock communication}
+\subsubsection{Interblock Communication}
 In CUDA werden Threads in Blocks und Grids eingeteilt.
-Die Blöcke werden dann Streaming Multiprocessors (SM) zugeteilt.
+Die Blöcke werden Streaming Multiprocessors (SM) zugeteilt.
 Ein Block läuft immer auf genau einem SM.
-Die Threads in einem Block werden dann in Gruppen von 16 (einem Warp) parallel ausgeführt.
+Die Threads in einem Block werden in Gruppen von 16 (einem Warp) parallel ausgeführt.
 Die Synchronisierung innerhalb eines Blocks ist mit der Funktion "\_\_syncthreads()" möglich.
-Ein Thread wartet nach Aufruf diese Funktion, bis alle anderen Threads auch diesen Aufruf erreicht haben.
+Ein Thread wartet nach Aufruf dieser Funktion, bis alle anderen Threads auch diesen Aufruf erreicht haben.
 So kann sichergestellt werden, dass ein Zwischenergebnis eines Threads für alle anderen Threads sichtbar ist.
 
 Eine Kommunikation zwischen Blöcken ist nicht vorgesehen.
-Dies wird damit begründet, dass es für viele parallele Prozessoren nur schwer zu implementieren sei und dass dies außerdem die maximale Anzahl an Blocks wegen der Gefahr eines Deadlocks begrenzen würde~\cite{parallelreduction}.
+Dies wird damit begründet, dass es für viele parallele Prozessoren nur schwer zu implementieren ist.
+Außerdem müsste dabei die maximale Anzahl an Blöcken wegen der Gefahr eines Deadlocks begrenzen werden~\cite{parallelreduction}.
 
-Eine Kommunikation zwischen den Blöcken ist für den Algorithmus aber nötig, da immer wieder Zwischenergebnisse (Beispielsweise die gefunden Maximas) allen Threads zugänglich gemacht werden müssen.
+Eine Kommunikation zwischen den Blöcken ist für den Algorithmus aber nötig, da immer wieder Zwischenergebnisse (beispielsweise die gefunden Maximas) allen Threads zugänglich gemacht werden müssen.
 Die Threads schreiben die Zwischenergebnisse in den globalen Speicher. Der Host-Thread wartet ab, bis der Kernel vollständig beendet ist und startet anschließend einen neuen Kernel, dessen Threads jetzt alle auf die Zwischenergebnisse zugreifen können.
 %%unterteilung in viele kleine kernel
 
 Es gibt auch andere Algorithmen zur Synchronisierung der Blöcke. Diese werden aber nicht offiziell von CUDA unterstützt~\cite{interblockgpusync}.
 %http://eprints.cs.vt.edu/archive/00001087/01/TR_GPU_synchronization.pdf .
-Die Grundlegende Idee ist, dass jeder Block zum Beginn der Synchronisierung eine Variable im globalen Speicher aktualisiert und anschließend den Wert dieser Variable in einer While-Schleife solange abfragt, bis alle Threads diese Variable aktualisiert haben.
+Die grundlegende Idee ist, dass jeder Block zu Beginn der Synchronisierung eine Variable im globalen Speicher aktualisiert und anschließend den Wert dieser Variable in einer While-Schleife solange abfragt, bis alle Threads diese Variable aktualisiert haben.
 \subsection{Experimente}
 Die Experimente wurden durchgeführt auf einem System mit Intel Xeon E5405 (2,00 GHz) mit 2GB RAM. 
-Die Verwendete Grafikkarte war eine Tesla C2050 mit 3GB RAM und 14 Multiprocessoren mit insgesamt 448 Cores die mit einer Frequenz von 1.15GHz laufen. Gemessen wurde nur die Zeit der Berechnung nicht jedoch das Kopieren der Daten in den jeweiligen Arbeitsspeicher.
+Die verwendete Grafikkarte war eine Tesla C2050 mit 3GB RAM und 14 Multiprocessoren mit insgesamt 448 Cores, die mit einer Frequenz von 1.15GHz laufen. Gemessen wurde nur die Zeit der Berechnung, nicht jedoch das Kopieren der Daten in den jeweiligen Arbeitsspeicher.
 
 \subsubsection{LIBSVM-Datensätze}
-Die benutzten Datensätze stammen von der LIBSVM-Homepage~\cite{libsvm-data}. Als Abbruchbedingung wurde $\epsilon < 0.01$ gewählt. Die Kosten wurden auf $C=1$ gesetzt. Die Ergebnisse des Testlaufs mit Linearem Kernel sind in Tabelle \ref{tbl:normal-c1-g5-linear-10} zu sehen. Für den Gauss-Kernel wurde $\gamma=0.5$ gesetzt. Die Ergebnisse sind in Tabelle \ref{tbl:normal-c1-g5-gauss-10} zu sehen.
+Die benutzten Datensätze stammen von der LIBSVM-Homepage~\cite{libsvm-data}. Als Abbruchbedingung wurde $\epsilon < 0.01$ gewählt. Die Kosten wurden auf $C=1$ gesetzt. Die Ergebnisse des Testlaufs mit linearem Kernel sind in Tabelle \ref{tbl:normal-c1-g5-linear-10} zu sehen. Für den Gauss-Kernel wurde $\gamma=0.5$ gesetzt. Die Ergebnisse sind in Tabelle \ref{tbl:normal-c1-g5-gauss-10} zu sehen.
 
-Dort ist zu erkennen, dass bei Datensätzen mit wenig Daten (breast-cancer: 684, ionosphere: 351) des Host-Programm im Vorteil ist. Mit steigender Anzahl an Daten (a4a: 4781) wird das CUDA-Programm besser.
+Dort ist zu erkennen, dass bei Datensätzen mit wenig Daten (breast-cancer: 684, ionosphere: 351) das Host-Programm im Vorteil ist. Mit steigender Anzahl an Daten (a4a: 4781) wird das CUDA-Programm besser.
 Der Gauss-Kernel erreicht im Vergleich zu einem linearen Kernel einen etwas höheren Speedup.
 
 \begin{table}
@@ -206,13 +256,13 @@ ionosphere & 1.07 & 6.31 & 0.17 \\
 Um die Möglichkeiten und Grenzen des parallelen Algorithmus auf der Grafikkarte besser ausloten zu können, wurden für dieses Experiment künstlich generierte Daten benutzt.
 Dadurch können die Parameter dieser Daten besser kontrolliert werden.
 
-Die Generierten Daten haben eine Dimension von 1024. Es wurden 32768 Vektoren generiert. Um weitere Daten zu generieren wurde jeweils die Diemension verdoppelt und die Anzahl der Vektoren halbiert. Damit bleibt die Menge der zu verarbeitenden Daten konstant. Um die Laufzeit des Algorithmen trotz dieser großen Daten im Rahmen zu halten, wurde die Anzahl der Iterationen auf 100 begrenzt.
+Die generierten Daten haben eine Dimension von 1024. Es wurden 32768 Vektoren generiert. Um weitere Daten zu generieren, wurde jeweils die Dimension verdoppelt und die Anzahl der Vektoren halbiert. Damit bleibt die Menge der zu verarbeitenden Daten konstant. Um die Laufzeit des Algorithmus trotz dieser großen Daten im Rahmen zu halten, wurde die Anzahl der Iterationen auf 100 begrenzt.
 
-Das Ergebniss dieses Experiments ist in Tabelle \ref{tbl:ratio-gauss-10} dargestellt. Der parallele Algorithmus wird mit zunehmender Anzahl an Vektoren und damit mehr Threads immer schneller. Der serielle Algorithmus hingegen benötigt für die 100 Iterationen immer etwa die gleiche Zeit. Der maximal erreichte Speedup beträgt.
+Das Ergebnis dieses Experiments ist in Tabelle \ref{tbl:ratio-gauss-10} dargestellt. Der parallele Algorithmus wird mit zunehmender Anzahl an Vektoren und damit mehr Threads immer schneller. Der serielle Algorithmus hingegen benötigt für die 100 Iterationen immer etwa die gleiche Zeit. Der maximal erreichte Speedup beträgt. %TODO: eintragen
 
 
 Die Bandbreite ist eine Möglichkeit das Potential eines CUDA-Programms zu berechnen. Dazu wird die effektive Bandbreite mit der theorethisch möglichen Bandbreite verglichen.
-Ist der Unterschied sehr groß, dann ist es Wahrscheinlich, dass an einer Stelle des Programms Bandbreite verschenkt wird.
+Ist der Unterschied sehr groß, dann ist es wahrscheinlich, dass an einer Stelle des Programms Bandbreite verschenkt wird.
 
 Die Formel zur Berechnung der effektiven Bandbreite lautet folgendermaßen~\cite{cudabestpracticeguide}:
 \begin{align}
@@ -246,10 +296,10 @@ Dimension & Vectors & seriell & cuda & speedup \\
 \end{table}
 
 \subsubsection{Einfluss der Dichte der Datensätze}
-Daten enthalten oft viele Elemente deren Wert $0$ ist. Um Speicherplatz zu sparen werden im LIBSVM-Format deshalb nur die Elemente ungleich Null gespeichert. Im Host-Programm werden die Daten genauso gespeichert und auch verarbeitet.
+Daten enthalten oft viele Elemente deren Wert $0$ ist. Um Speicherplatz zu sparen, werden im LIBSVM-Format deshalb nur die Elemente ungleich Null gespeichert. Im Host-Programm werden die Daten genauso gespeichert und auch verarbeitet.
 
 Für das CUDA-Programm ist diese Art des Speicherns der Daten aber nicht praktikabel. Die benötigten If-Bedingungen würden zu divergierenden Branches innerhalb eines Warps führen. 
-Außerdem könnten die Speicherzugriffe auf den Globalen Speicher nicht mehr zusammengefasst werden. Der zu erwartende maximale Speedup wäre deshalb viel geringer.
+Außerdem könnten die Speicherzugriffe auf den globalen Speicher nicht mehr zusammengefasst werden. Der zu erwartende maximale Speedup wäre deshalb viel geringer.
 
 Es ist also zu erwarten, dass mit abnehmender Dichte der Daten das Host-Programm schneller wird, das CUDA-Programm aber immer etwa die gleiche Zeit benötigt. 
 
@@ -374,10 +424,10 @@ Dichte & seriell & cuda & speedup \\
 % \end{table}
 
 
-\subsubsection{Fazit der Experimente}
+\subsection{Fazit}
 Bei kleinen Datensätzen nimmt der Overhead der vielen Kernelstarts einen immer größeren Teil der Rechenzeit ein.
-Das CUDA-Programm ist dann im Vorteil, wenn die Datensätze groß und Dicht sind. 
-Dann erreicht es auch die Hälfte der theorethisch möglichen Bandbreite der Grafikkarte und übertrifft das Host-Programm um mehr als den Faktor 50.
+Das CUDA-Programm ist dann im Vorteil, wenn die Datensätze groß und dicht sind. 
+Dann erreicht es auch die Hälfte der theoretisch möglichen Bandbreite der Grafikkarte und übertrifft das Host-Programm um mehr als den Faktor 50.
 \clearpage
 
 %\nocite{libsvm-data}
@@ -388,7 +438,7 @@ Dann erreicht es auch die Hälfte der theorethisch möglichen Bandbreite der Gra
 \nocite{libsvm}
 \nocite{cudaprogrammingguide}
 
-
+\renewcommand{\refname}{Literaturverzeichnis}
 \bibliography{doc}{}
 \bibliographystyle{plain}
 
