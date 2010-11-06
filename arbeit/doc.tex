@@ -27,7 +27,7 @@ Christoph Göring\\
 % Telefon: +49.1234.56789\\
 % E-Mail: tmusterstudent@foo.bar\\[10mm]
 % Fachsemester: 6\\[10mm]
-Abgabe: 1. November 2011\\
+Abgabe: 6. November 2010\\
 }
 % Ausgabe des Datums unterdrücken
 \date{}
@@ -39,7 +39,8 @@ Abgabe: 1. November 2011\\
 \maketitle
 \begin{abstract}
 %Hier folgt eine Zusammenfassung der Arbeit in ein bis zwei Sätzen.
-In dieser Arbeit wird ein geometrischer Algorithmus zum Trainieren einer Support Vector Maschine auf einer CUDA-Grafikkarte implementiert. Anschließend wird das Programm optimiert und mit der seriellen Variante des Programms verglichen.
+In dieser Arbeit wird ein geometrischer Algorithmus zum Trainieren einer Support Vector Maschine auf einer CUDA-Grafikkarte implementiert. 
+Anschließend wird das Programm optimiert und mit der seriellen Variante des Programms verglichen.
 \end{abstract}
 
 \clearpage
@@ -204,15 +205,15 @@ Es gibt auch andere Algorithmen zur Synchronisierung der Blöcke. Diese werden a
 %http://eprints.cs.vt.edu/archive/00001087/01/TR_GPU_synchronization.pdf .
 Die grundlegende Idee ist, dass jeder Block zu Beginn der Synchronisierung eine Variable im globalen Speicher aktualisiert und anschließend den Wert dieser Variable in einer While-Schleife solange abfragt, bis alle Threads diese Variable aktualisiert haben.
 \subsection{Experimente}
-Die Experimente wurden durchgeführt auf einem System mit Intel Xeon E5405 (2,00 GHz) mit 2GB RAM. 
-Die verwendete Grafikkarte war eine Tesla C2050 mit 3GB RAM und 14 Multiprocessoren mit insgesamt 448 Cores, 
+Die Experimente wurden auf einem System mit Intel Xeon E5405 (2,00 GHz) mit 4GB RAM durchgeführt. 
+Die verwendete Grafikkarte war eine Tesla C2050 mit 3GB RAM und 14 Multiprozessoren mit insgesamt 448 Cores, 
 die mit einer Frequenz von 1.15GHz laufen. 
 
 Gemessen wurde nur die Zeit der Berechnung.
-Nicht gemessen wurde das einlesen der Daten ins LIBSVM-Format und beim Cuda-Programm das Kopieren der Daten 
-in ein Array, das initialisieren von CUDA und das Kopieren vom Host-RAM in den Grafikkarten-RAM.
+Nicht gemessen wurde das Einlesen der Daten in das LIBSVM-Format und beim Cuda-Programm das Kopieren der Daten 
+in ein Array, das Initialisieren von CUDA und das Kopieren vom Host-RAM in den Grafikkarten-RAM.
 Bei den generierten Daten aus Abschnit \ref{gendata} dauert das Einlesen ins LIBSVM-Format etwa 16 Sekunden, das Kopieren in ein Array
-dauert etwa 4 Sekunden und das Kopieren in den Grafikkarten-RAM etwa 0.2 Sekunden. Das Initialisieren von CUDA dauert etwa 1 Sekunde.
+etwa 4 Sekunden und das Kopieren in den Grafikkarten-RAM etwa 0.2 Sekunden. Das Initialisieren von CUDA benötigt etwa 1 Sekunde.
 
 %, nicht jedoch das Einlesen der Daten und Kopieren in den jeweiligen Arbeitsspeicher.
 %Bei den großen Dateien aus Abschnit \ref{gendata} dauert das einlesen ins LIBSVM-Format etwa 16 Sekunden.
